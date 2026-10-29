@@ -33,3 +33,11 @@ Executed using Playwright with installed Chromium against the actual Python HTTP
 No 3D camera is included: the brief explicitly requests a large 2D model. Paused discrete conceptual events are the primary visualisation, not a claim about continuous biological timing. Reduced-motion styling avoids decorative motion, and playback is opt-in. Chromosome selectors support Enter/Space; the scrubber and buttons provide non-drag controls. Screen-reader labels use the active language. No live external content is required.
 
 The textbook PDF and EDB documents were not available for independent reference verification. The app follows the explicit supplied specification and glossary; textbook page checks and formal curriculum review remain unperformed. GitHub Pages publication is separate from pushing source.
+
+## Offline edition — passed
+
+Generated `offline.html` was loaded into Chromium with networking disabled. Language switching, final meiosis rendering and state recording passed without JavaScript errors. Direct `file://` navigation is blocked by this cloud browser's administrator policy, so validation injected the exact generated HTML with `setContent`; a direct file-open check in this managed browser remains unrun.
+
+## Delivery
+
+Source and generated offline edition were pushed to GitHub `main`. The GitHub Pages settings API returned `Forbidden`, so automated Pages activation was not possible with the provided access. No live Pages deployment is claimed.
