@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {snapshot,products,chrom} from '../model.mjs';
+import {snapshot,products,chrom,countsAt} from '../model.mjs';
 import {dict} from '../i18n.mjs';
 test('five stable centromere-based checkpoints',()=>{for(const [kind,e,count,n,rep] of [['mitosis',0,[4,4],1,false],['mitosis',1,[4,8],1,true],['mitosis',8,[4,4],2,false],['meiosis',5,[2,4],2,true],['meiosis',8,[2,2],4,false]]){const v=snapshot(kind,e);assert.deepEqual(v.count,count);assert.equal(v.cells.length,n);assert.equal(v.replicated,rep);for(const cell of v.cells){assert.equal(cell.length,count[0]);assert.equal(cell.length*(rep?2:1),count[1]);}}});
 test('all orientations preserve homologues in I and split sisters in II without replication',()=>{for(const flips of [[false,false],[false,true],[true,false],[true,true]]){const first=snapshot('meiosis',5,flips);assert.equal(first.replicated,true);assert.deepEqual(snapshot('meiosis',6,flips),first);for(let i=0;i<2;i++){assert.deepEqual(first.cells[i].map(c=>c.pair),[1,2]);const last=products('meiosis',flips);for(let j=0;j<2;j++)assert.deepEqual(last[i*2+j].map(c=>c.id),first.cells[i].map(c=>c.id));assert.ok(last[i*2].every(c=>c.sister===0));assert.ok(last[i*2+1].every(c=>c.sister===1));}assert.equal(snapshot('meiosis',7,flips).scope,'pole');}});
@@ -8,3 +8,17 @@ test('reciprocal non-sister exchange conserves locus order and allele totals',()
 test('four combinations across runs, only two without crossing over in one run',()=>{const all=new Set();for(const flips of [[false,false],[false,true],[true,false],[true,true]]){const run=products('meiosis',flips).map(c=>c.map(a=>a.origin).join(''));assert.equal(new Set(run).size,2);run.forEach(x=>all.add(x));}assert.equal(all.size,4);});
 test('mitosis has identical genetic information and ignores meiotic controls',()=>{assert.deepEqual(products('mitosis',[true,false],true).map(cell=>cell.map(c=>[c.id,c.loci])),products('mitosis').map(cell=>cell.map(c=>[c.id,c.loci])));});
 test('both languages have matching stable content IDs',()=>assert.deepEqual(Object.keys(dict.zh).sort(),Object.keys(dict.en).sort()));
+
+test('per-cell n/t labels distinguish replication, sister separation and per-pole numbers',()=>{
+ for(const kind of ['mitosis','meiosis']){
+  assert.deepEqual(countsAt(kind,0).count,[4,4]);
+  assert.deepEqual(countsAt(kind,1).count,[4,8]);
+  assert.deepEqual(countsAt(kind,2.5).count,[4,8]);
+ }
+ assert.deepEqual(countsAt('mitosis',3.5),{count:[8,8],notation:'8',perPole:{count:[4,4],notation:'2n = 4'}});
+ assert.deepEqual(countsAt('mitosis',5).count,[4,4]);
+ assert.deepEqual(countsAt('meiosis',3.5),{count:[4,8],notation:'2n = 4',perPole:{count:[2,4],notation:'n = 2'}});
+ assert.deepEqual(countsAt('meiosis',5.5).count,[2,4]);
+ assert.deepEqual(countsAt('meiosis',6.5),{count:[4,4],notation:'4',perPole:{count:[2,2],notation:'n = 2'}});
+ assert.deepEqual(countsAt('meiosis',8).count,[2,2]);
+});

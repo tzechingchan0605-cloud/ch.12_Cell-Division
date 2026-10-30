@@ -54,6 +54,20 @@ try {
   const download=page.waitForEvent('download');await page.locator('#download').click();assert.ok((await download).suggestedFilename().endsWith('.csv'));
   await page.setViewportSize({width:390,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await page.screenshot({path:'/tmp/cell-animation-mobile.png',fullPage:true});
+  await page.setViewportSize({width:1366,height:768});await page.evaluate(()=>scrollTo(0,0));
+  // Both language variants must keep the complete transport panel in view.
+  for(const language of ['en','zh']) {
+    await page.locator('#'+language).click();
+    for(const [value,label] of [[1.5,'Prophase I'],[2.5,'Metaphase I'],[3.5,'Anaphase I'],[4.15,'Telophase I'],[4.6,'Cytokinesis I'],[5.1,'Prophase II'],[5.6,'Metaphase II'],[6.5,'Anaphase II'],[7.15,'Telophase II'],[7.6,'Cytokinesis II']]) {
+      await seek(value);
+      if(language==='en')assert.equal(await page.locator('[data-phase="meiosis"]').innerText(),label);
+      else assert.ok(!(await page.locator('[data-phase="meiosis"]').innerText()).includes('phase'));
+      const box=await page.locator('.transport').boundingBox();
+      assert.ok(box.y>=0&&box.y+box.height<=768,'playback and scrubber must fit the viewport');
+    }
+  }
+  assert.equal(await page.locator('.origin-label').filter({hasText:/s[01]/}).count(),0);
+  assert.ok((await page.locator('[data-count="meiosis"]').innerText()).includes('t = 4'));
   const reduced=await browser.newPage({reducedMotion:'reduce'});
   await reduced.goto(process.env.BASE_URL||'http://127.0.0.1:8000');
   assert.equal(await reduced.locator('#reduced').isChecked(),true);
@@ -63,6 +77,7 @@ try {
   const offline=await browser.newPage();offline.on('pageerror',e=>errors.push(e.message));
   await offline.context().setOffline(true);await offline.setContent(await readFile(new URL('../offline.html',import.meta.url),'utf8'));
   await offline.locator('#en').click();await offline.locator('#timeline').fill('3.5');
+  await offline.locator('.observation-note summary').click();
   assert.equal(await offline.locator('#timeline').inputValue(),'3.5');
   assert.ok((await offline.locator('#model-note').innerText()).includes('moving'));
   assert.deepEqual(errors,[]);

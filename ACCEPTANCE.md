@@ -2,7 +2,7 @@
 
 ## Automated biological and animation rules — passed
 
-`node --test tests/*.test.mjs`: **11 tests passed, 0 failed**.
+`node --test tests/*.test.mjs`: **14 tests passed, 0 failed**.
 
 | Checkpoint | Chromosomes | DNA molecules | Scope |
 |---|---:|---:|---|
@@ -35,7 +35,7 @@ Screenshots at events 3, 3.5, 4, 4.65, 7.5 and 8 were captured for inspection. T
 
 ## Scope / limits
 
-The model uses a continuous 2D schematic, not measured biological time, physical forces or molecular mechanisms. First division is drawn vertically, second meiosis horizontally, for traceable lineage and consistent spindle attachment. Counts during transitions explicitly refer to the previous complete checkpoint and its scope, rather than fractional or misleading whole-cell totals. The optional reduced-motion mode deliberately shows discrete checkpoints.
+The model uses a continuous 2D schematic, not measured biological time, physical forces or molecular mechanisms. First division is drawn vertically, second meiosis horizontally, for traceable lineage and consistent spindle attachment. Counts distinguish each whole undivided cell from each pole/forming nucleus. Mitotic anaphase shows 8 chromosomes and t = 8 per undivided cell, with 2n = 4 and t = 4 per pole. Meiosis I shows 2n = 4 and t = 8 per undivided cell, with n = 2 and t = 4 per pole; meiosis II shows 4 and t = 4 per undivided cell, with n = 2 and t = 2 per pole. The model defines t as chromatid number, not ploidy. The optional reduced-motion mode deliberately shows discrete checkpoints.
 
 All chromosome selectors support Enter/Space; the slider and event-step controls provide alternatives to dragging. No runtime external content is required. The textbook PDF and EDB documents remain unavailable for independent source verification. GitHub Pages activation remains separate from pushing source.
 
@@ -46,3 +46,9 @@ Generated `offline.html` was loaded into Chromium with networking disabled. Lang
 ## Delivery
 
 Source and generated offline edition were pushed to GitHub `main`. The GitHub Pages settings API returned `Forbidden`, so automated Pages activation was not possible with the provided access. No live Pages deployment is claimed.
+
+## Compact view, phase badges and n/t counters — passed
+
+Additional automated checks cover phase labels I/II, nuclear-envelope re-formation, and per-cell/per-pole counts during replication, metaphase, anaphase, telophase and final daughter formation. The 14-test total includes these checks.
+
+Chromium checks at 1366 × 768 verify that the entire transport panel (playback buttons and scrubber) remains within the viewport in both English and Traditional Chinese throughout both meiotic divisions. Each phase badge is checked against prophase, metaphase, anaphase, telophase and cytokinesis at representative fractional positions. Internal s0/s1 suffixes are absent from displayed chromosome labels; M/P origin and chromosome-pair identity remain. Detailed observation notes are expandable below the transport panel. Offline checks expand those notes explicitly.

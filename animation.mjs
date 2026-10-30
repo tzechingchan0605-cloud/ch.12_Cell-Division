@@ -81,6 +81,15 @@ function membranesAt(kind, position) {
   return membranes;
 }
 
+function nucleiAt(kind,p) {
+  const first=ease((p-4)/.3)*(kind==='meiosis'?1-ease((p-5)/.45):1);
+  const second=kind==='meiosis'?ease((p-7)/.3):0;
+  return [115,325].flatMap((cy,i)=>[
+    {key:`first-${i}`,path:boundary(300,cy,248,67),opacity:first},
+    ...[155,445].map((cx,j)=>({key:`second-${i}-${j}`,path:boundary(cx,cy,110,65),opacity:second}))
+  ]);
+}
+
 export function sceneAt(kind, position, flips = [false,false], crossing = false) {
   const p = Math.max(0, Math.min(8, position));
   const event = Math.min(7, Math.floor(p)), progress = p - event;
@@ -106,5 +115,5 @@ export function sceneAt(kind, position, flips = [false,false], crossing = false)
     if(p>=5 && kind==='meiosis'){ x=a.sister===0?25:575; y=pole===0?115:325; opacity=spindleII; }
     return {key:a.key,x,y,toX:a.x,toY:a.y,opacity:opacity*a.opacity};
   });
-  return {position:p,strands,distal,membranes:membranesAt(kind,p),spindles,attached};
+  return {position:p,strands,distal,membranes:membranesAt(kind,p),nuclei:nucleiAt(kind,p),spindles,attached};
 }
