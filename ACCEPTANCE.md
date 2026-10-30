@@ -1,8 +1,8 @@
 # Acceptance checks
 
-## Automated biological rules — passed
+## Automated biological and animation rules — passed
 
-`node --test tests/model.test.mjs`: **6 tests passed, 0 failed**.
+`node --test tests/*.test.mjs`: **11 tests passed, 0 failed**.
 
 | Checkpoint | Chromosomes | DNA molecules | Scope |
 |---|---:|---:|---|
@@ -12,27 +12,32 @@
 | After meiosis I | 2 | 4 | Per daughter |
 | After meiosis II | 2 | 2 | Per product |
 
-All four orientation settings preserve paired sisters in I and separate them in II. Meiosis-I and pre-II model snapshots are identical: there is no second replication. Exchanges affect only M1-s1 and P1-s0, conserve M/P totals at each locus and preserve locus order. Mitosis ignores meiotic variation controls. Four origin combinations are reachable across runs, with two unique combinations in an individual run without crossing over. Display controls are not arguments to the biological model.
+All four orientation settings preserve paired sisters in I and separate them in II. There is no second DNA replication. Reciprocal exchanges affect only M1-s1 and P1-s0, conserve M/P totals at each locus and preserve locus order. Four origin combinations are reachable across runs, with two unique combinations in an individual run without crossing over.
+
+Animation checks verify continuous chromosome and distal-segment paths across every event boundary in both divisions, with all four orientations and crossing over on/off. Sampled frames preserve arm lengths throughout the animation. The first separation follows upper/lower spindle poles; sister centromeres remain together in meiosis I. Final visual positions and distal ancestry match the biological products for every orientation. Different frame rates and display speeds reach identical final scenes.
 
 ## Chromium functional checks — passed
 
-Executed using Playwright with installed Chromium against the actual Python HTTP server, at desktop 1440 × 1000 and mobile 390 × 844:
+`tests/browser.mjs` was executed using Playwright and installed Chromium against the actual Python HTTP server at desktop 1440 × 1100 and mobile 390 × 844:
 
-- Application renders without JavaScript errors.
-- Replication checkpoint displays eight DNA molecules; final meiosis renders eight individual chromosomes across four products.
-- Language switch retains event, crossing-over selection, records and open explanation response; language preference survives reload.
-- Two diagrams appear in comparison mode.
-- A recorded result remains unchanged after replay and orientation changes.
-- CSV download succeeds with the selected language filename.
-- Challenge submit requires a prediction and then reveals the explanation.
-- Playback advances the event; pause stops it.
-- No horizontal document overflow at mobile width.
+- More than eight distinct intermediate chromosome positions are observed within 500 ms of playback; movement is towards the upper pole during first separation.
+- Persistent SVG chromosome nodes survive frames, language switches and display changes.
+- Pause freezes a fractional event position; language/labels retain it. Changing speed does not reset or jump the animation.
+- Next step animates from a fractional position to exactly the next checkpoint, then stops.
+- In meiosis I, sisters remain joined while homologues separate towards opposite upper/lower poles.
+- Recorded states do not change after scrubbing and orientation changes. CSV download succeeds.
+- Bilingual challenge explanations and written responses work across language switches.
+- No JavaScript errors or horizontal document overflow on mobile.
+- The system reduced-motion preference is honoured and permits immediate discrete stepping.
+- The regenerated standalone offline edition supports fractional scrubbing without networking.
+
+Screenshots at events 3, 3.5, 4, 4.65, 7.5 and 8 were captured for inspection. The central SVG viewport remains fixed across these events.
 
 ## Scope / limits
 
-No 3D camera is included: the brief explicitly requests a large 2D model. Paused discrete conceptual events are the primary visualisation, not a claim about continuous biological timing. Reduced-motion styling avoids decorative motion, and playback is opt-in. Chromosome selectors support Enter/Space; the scrubber and buttons provide non-drag controls. Screen-reader labels use the active language. No live external content is required.
+The model uses a continuous 2D schematic, not measured biological time, physical forces or molecular mechanisms. First division is drawn vertically, second meiosis horizontally, for traceable lineage and consistent spindle attachment. Counts during transitions explicitly refer to the previous complete checkpoint and its scope, rather than fractional or misleading whole-cell totals. The optional reduced-motion mode deliberately shows discrete checkpoints.
 
-The textbook PDF and EDB documents were not available for independent reference verification. The app follows the explicit supplied specification and glossary; textbook page checks and formal curriculum review remain unperformed. GitHub Pages publication is separate from pushing source.
+All chromosome selectors support Enter/Space; the slider and event-step controls provide alternatives to dragging. No runtime external content is required. The textbook PDF and EDB documents remain unavailable for independent source verification. GitHub Pages activation remains separate from pushing source.
 
 ## Offline edition — passed
 
