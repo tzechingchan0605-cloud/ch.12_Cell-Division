@@ -9,16 +9,23 @@ test('four combinations across runs, only two without crossing over in one run',
 test('mitosis has identical genetic information and ignores meiotic controls',()=>{assert.deepEqual(products('mitosis',[true,false],true).map(cell=>cell.map(c=>[c.id,c.loci])),products('mitosis').map(cell=>cell.map(c=>[c.id,c.loci])));});
 test('both languages have matching stable content IDs',()=>assert.deepEqual(Object.keys(dict.zh).sort(),Object.keys(dict.en).sort()));
 
-test('per-cell n/t labels distinguish replication, sister separation and per-pole numbers',()=>{
- for(const kind of ['mitosis','meiosis']){
-  assert.deepEqual(countsAt(kind,0).count,[4,4]);
-  assert.deepEqual(countsAt(kind,1).count,[4,8]);
-  assert.deepEqual(countsAt(kind,2.5).count,[4,8]);
- }
- assert.deepEqual(countsAt('mitosis',3.5),{count:[8,8],notation:'8',perPole:{count:[4,4],notation:'2n = 4'}});
- assert.deepEqual(countsAt('mitosis',5).count,[4,4]);
- assert.deepEqual(countsAt('meiosis',3.5),{count:[4,8],notation:'2n = 4',perPole:{count:[2,4],notation:'n = 2'}});
- assert.deepEqual(countsAt('meiosis',5.5).count,[2,4]);
- assert.deepEqual(countsAt('meiosis',6.5),{count:[4,4],notation:'4',perPole:{count:[2,2],notation:'n = 2'}});
- assert.deepEqual(countsAt('meiosis',8).count,[2,2]);
+test('per-cell totals distinguish joined sisters from DNA molecules',()=>{
+ assert.deepEqual(countsAt('mitosis',0).count,[4,4]);assert.equal(countsAt('mitosis',0).chromatids,0);
+ for(const kind of ['mitosis','meiosis'])assert.equal(countsAt(kind,2.5).chromatids,8);
+ assert.deepEqual(countsAt('mitosis',3.5).count,[8,8]);assert.equal(countsAt('mitosis',3.5).chromatids,0);
+ assert.equal(countsAt('mitosis',3.5).perPole.chromatids,0);
+ assert.deepEqual(countsAt('meiosis',3.5).count,[4,8]);assert.equal(countsAt('meiosis',3.5).chromatids,8);
+ assert.equal(countsAt('meiosis',3.5).perPole.chromatids,4);
+ assert.equal(countsAt('meiosis',5.5).chromatids,4);
+ assert.deepEqual(countsAt('meiosis',6.5).count,[4,4]);assert.equal(countsAt('meiosis',6.5).chromatids,0);
+ assert.deepEqual(countsAt('meiosis',8).count,[2,2]);assert.equal(countsAt('meiosis',8).chromatids,0);
+});
+
+test('all fifteen rows match the supplied human reference scaled from 46 to 4 chromosomes',()=>{
+ const rows=[
+ ['mitosis',1.5,46,92,92],['mitosis',2.5,46,92,92],['mitosis',3.5,92,0,92],['mitosis',4.15,92,0,92],['mitosis',5,46,0,46],
+ ['meiosis',1.5,46,92,92],['meiosis',2.5,46,92,92],['meiosis',3.5,46,92,92],['meiosis',4.15,46,92,92],['meiosis',5,23,46,46],
+ ['meiosis',5.1,23,46,46],['meiosis',5.6,23,46,46],['meiosis',6.5,46,0,46],['meiosis',7.15,46,0,46],['meiosis',8,23,0,23]
+ ];
+ for(const [kind,p,chromosomes,joined,dna] of rows){const info=countsAt(kind,p);assert.deepEqual([info.count[0],info.chromatids,info.count[1]].map(v=>v*46/4),[chromosomes,joined,dna]);}
 });

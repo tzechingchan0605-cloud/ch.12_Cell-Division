@@ -23,3 +23,8 @@ h1{font-size:clamp(25px,2.4vw,32px);margin:4px 0 8px}.intro{margin-bottom:12px}.
 
 .layout{align-items:start}
 .count-scope{font-size:11px}.pole-count{flex-basis:100%;text-align:center;font-size:11px;color:#41665d}
+.phase-label{left:50%;top:2px;transform:translateX(-50%);max-width:95%;padding:0 6px;border:0;border-radius:0;background:transparent;text-align:center;white-space:nowrap;font-size:clamp(20px,2vw,28px);line-height:1.2;font-weight:800}
+.stage{min-height:48px}.stage b{font-weight:500}.model svg{height:clamp(180px,calc(100dvh - 588px),280px)}
+.count-scope{flex-basis:100%;text-align:center}
+@media(max-width:950px){.model svg{height:220px}.phase-label{font-size:24px}}
+@media(min-width:951px) and (max-height:850px){header{padding-top:6px;padding-bottom:6px}main{padding-top:10px}.intro .eyebrow{display:none}.intro h1{font-size:28px;margin:0;line-height:1.25}.intro{margin-bottom:8px}.toolbar{margin-bottom:8px}}

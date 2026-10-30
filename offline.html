@@ -23,6 +23,11 @@ h1{font-size:clamp(25px,2.4vw,32px);margin:4px 0 8px}.intro{margin-bottom:12px}.
 
 .layout{align-items:start}
 .count-scope{font-size:11px}.pole-count{flex-basis:100%;text-align:center;font-size:11px;color:#41665d}
+.phase-label{left:50%;top:2px;transform:translateX(-50%);max-width:95%;padding:0 6px;border:0;border-radius:0;background:transparent;text-align:center;white-space:nowrap;font-size:clamp(20px,2vw,28px);line-height:1.2;font-weight:800}
+.stage{min-height:48px}.stage b{font-weight:500}.model svg{height:clamp(180px,calc(100dvh - 588px),280px)}
+.count-scope{flex-basis:100%;text-align:center}
+@media(max-width:950px){.model svg{height:220px}.phase-label{font-size:24px}}
+@media(min-width:951px) and (max-height:850px){header{padding-top:6px;padding-bottom:6px}main{padding-top:10px}.intro .eyebrow{display:none}.intro h1{font-size:28px;margin:0;line-height:1.25}.intro{margin-bottom:8px}.toolbar{margin-bottom:8px}}
 </style></head><body><header><a class="brand" href="#">◉ <span id="brand"></span></a><div class="language" aria-label="Language"><button id="zh" lang="zh-Hant">繁體中文</button><span>|</span><button id="en" lang="en">English</button></div></header><main id="app"></main><script type="module">
 const ids=['M1','P1','M2','P2'];
 function chrom(id,sister=0,cross=false){const pair=+id[1],origin=id[0];return {id,pair,origin,sister,loci:[origin, cross&&pair===1&&((origin==='M'&&sister===1)||(origin==='P'&&sister===0))?(origin==='M'?'P':'M'):origin]};}
@@ -36,24 +41,410 @@ function snapshot(kind,event,flips=[false,false],cross=false){
  return {cells:products(kind,flips,cross),replicated:false,count:[2,2],scope:event===7?'pole':'product',separation:event===7?'sisters':null};
 }
 
-// Whole-cell totals are distinct from the chromosome set at each spindle pole.
-// t is a teaching label for chromatid/DNA-molecule number, not a ploidy symbol.
+// count = [chromosomes, DNA molecules]. "chromatids" counts only joined
+// sister chromatids, matching the user's annotated reference convention.
 function countsAt(kind,position){
  const p=Math.max(0,Math.min(8,position));
- if(p===0)return {count:[4,4],notation:'2n = 4',perPole:null};
- if(p<1)return {count:[4,'4 → 8'],notation:'2n = 4',perPole:null};
- if(p<=3)return {count:[4,8],notation:'2n = 4',perPole:null};
- if(kind==='mitosis')return p<5?{count:[8,8],notation:'8',perPole:{count:[4,4],notation:'2n = 4'}}:{count:[4,4],notation:'2n = 4',perPole:null};
- if(p<5)return {count:[4,8],notation:'2n = 4',perPole:{count:[2,4],notation:'n = 2'}};
- if(p<=6)return {count:[2,4],notation:'n = 2',perPole:null};
- if(p<8)return {count:[4,4],notation:'4',perPole:{count:[2,2],notation:'n = 2'}};
- return {count:[2,2],notation:'n = 2',perPole:null};
+ if(p===0)return {count:[4,4],chromatids:0,notation:'2n = 4',perPole:null};
+ if(p<1)return {count:[4,'4 → 8'],chromatids:'0 → 8',notation:'2n = 4',perPole:null};
+ if(p<=3)return {count:[4,8],chromatids:8,notation:'2n = 4',perPole:null};
+ if(kind==='mitosis')return p<5?{count:[8,8],chromatids:0,notation:'8',perPole:{count:[4,4],chromatids:0,notation:'2n = 4'}}:{count:[4,4],chromatids:0,notation:'2n = 4',perPole:null};
+ if(p<5)return {count:[4,8],chromatids:8,notation:'2n = 4',perPole:{count:[2,4],chromatids:4,notation:'n = 2'}};
+ if(p<=6)return {count:[2,4],chromatids:4,notation:'n = 2',perPole:null};
+ if(p<8)return {count:[4,4],chromatids:0,notation:'4',perPole:{count:[2,2],chromatids:0,notation:'n = 2'}};
+ return {count:[2,2],chromatids:0,notation:'n = 2',perPole:null};
 }
+const referenceStages=[
+ ['mitosis',1.5],['mitosis',2.5],['mitosis',3.5],['mitosis',4.15],['mitosis',5],
+ ['meiosis',1.5],['meiosis',2.5],['meiosis',3.5],['meiosis',4.15],['meiosis',5],
+ ['meiosis',5.1],['meiosis',5.6],['meiosis',6.5],['meiosis',7.15],['meiosis',8]
+];
 
-const terms=[['染色體','chromosome'],['同源染色體','homologous chromosomes'],['染色單體','chromatid'],['姊妹染色單體','sister chromatids'],['非姊妹染色單體','non-sister chromatids'],['着絲點','centromere'],['紡錘絲','spindle fibres'],['有絲細胞分裂','mitosis'],['減數細胞分裂','meiosis'],['核分裂','nuclear division'],['細胞質分裂','cytoplasmic division'],['二倍體','diploid'],['單倍體','haploid'],['獨立分配','independent assortment'],['互換','crossing over'],['間期','interphase']];
+const terms=[["染色體","chromosome"],["同源染色體","homologous chromosomes"],["染色單體","chromatid"],["姊妹染色單體","sister chromatids"],["非姊妹染色單體","non-sister chromatids"],["着絲點","centromere"],["紡錘絲","spindle fibres"],["有絲細胞分裂","mitosis"],["減數細胞分裂","meiosis"],["核分裂","nuclear division"],["細胞質分裂","cytoplasmic division"],["二倍體","diploid"],["單倍體","haploid"],["獨立分配","independent assortment"],["互換","crossing over"],["間期","interphase"]];
 const dict={
-zh:{chromatids:'染色單體',chromosomeChromatidCounts:'染色體 / 染色單體',sisterHelp:'複製後，同一染色體的兩條相連結構是姊妹染色單體；分離後各自成為染色體。',countNotation:'n = 2 表示一套有 2 條染色體；2n = 4 表示二倍體有 4 條。本模型以 t 表示染色單體數，並非倍性符號。姊妹分離時顯示整個未分裂細胞的總數，另列每極數目；不可把暫時的整細胞總數當作每個細胞核的倍性。複製過程的 t = 4 → 8 是示意範圍。',interphaseName:'間期',prophase:'前期',metaphase:'中期',anaphase:'後期',telophase:'末期',cytokinesis:'細胞質分裂',divisionComplete:'分裂完成',observationHint:'觀察提示與計數說明',lastCheckpoint:'上一個完整檢查點',transitionNote:'染色體正在移動。數目欄區分每個細胞與每極；t 表示染色單體數。可暫停在任何位置，或按「下一步」移至下一檢查點。',reducedMotion:'減少動態效果（逐格顯示）',brand:'細胞分裂實驗室',eyebrow:'CH.12 / 互動生物學',title:'看見染色體的每一步',intro:'追蹤同源染色體與姊妹染色單體，探索一次複製如何產生兩種不同的分裂結果。',badge:'示意模型 · 2n = 4',explore:'自由探索',challenge:'引導挑戰',mitosis:'有絲細胞分裂',meiosis:'減數細胞分裂',compare:'並排比較',sync:'同步概念事件（非相同實際時間）',labels:'標示',on:'開',off:'關',model:'染色體觀察室',play:'播放',pause:'暫停',step:'下一步',reset:'重設',replay:'重播',speed:'播放速度（僅供觀察）',slow:'慢速',normal:'標準',fast:'快速',timeline:'概念事件進度',maternal:'母源 M · 實線',paternal:'父源 P · 虛線',select:'點選染色體，追蹤其同源夥伴或姊妹。每個標籤均為可用鍵盤操作的按鈕。',selected:'已選取',identity:'身份',homologue:'同源夥伴',sister:'姊妹：同一條染色體複製後的兩條染色單體',settings:'減數分裂設定',pair:'同源對',flip:'翻轉排列',random:'獨立隨機排列並重播',cross:'示範互換',alleles:'顯示等位基因標記',locked:'排列與互換需在分離前設定；重播可重新設定。',crosshelp:'互換示範：同源對 1 各有一條非姊妹染色單體在相同位置互換遠端片段。這是隔離概念的教學設定，並非生物體可選擇的開關。',observations:'觀察與證據',record:'記錄目前狀態',download:'下載 CSV',clear:'清除記錄',empty:'尚無記錄。移至不同事件並記錄以作比較。',trial:'記錄',stage:'事件',counts:'染色體 / DNA 分子',result:'最終組合（每個產物）',scope:'計數範圍',cell:'每個細胞',pole:'每一極／形成中的細胞核',daughter:'每個子細胞',product:'每個最終產物',chromosomes:'染色體',dna:'DNA 分子',ploidy:'倍性',diploid:'二倍體',haploid:'單倍體',repnote:'複製使 DNA 分子由 4 變為 8；着絲點仍未分離，染色體仍為 4。',sistersnote:'姊妹染色單體分離後各自成為染色體。此處顯示每極數目，不是整個尚未分裂的細胞總數。',homologuesnote:'減數分裂 I 分開同源染色體，姊妹着絲點仍相連；染色體數目在此減半。',norep:'兩次減數核分裂之間不再複製 DNA。',variation:'n = 2、沒有互換時，重複分裂可出現四種母／父源組合；單次分裂只產生其中一部分，不一定有四種。',assumptions:'模型說明與來源',assumptionText:'本模型為等分的二維示意圖，時間與長度均非人體實測數據；不表示人類卵子形成四個等大的功能性配子。等位基因在兩個相同位置以 M／P 標記，僅作追蹤；不涉及連鎖計算。紡錘絲為方向示意。成核與細胞質分裂以形成子細胞概括。',source:'依使用者提供的第 12 章規格與雙語詞彙實作；未提供 te_12_c.pdf，未核對印刷頁 12-3–12-20 或課本圖。未另行核對 EDB 文件；此工具不聲稱逐頁課程認證。',glossary:'雙語詞彙',stages:['間期：複製前','間期：DNA 複製後','排列與配對','分離前排列','第一次核分裂：分離','第一次分裂完成','第二次分裂前（無複製）','第二次核分裂：分離','最終產物'],mitStages:['間期：複製前','間期：DNA 複製後','個別染色體排列','分離前排列','姊妹染色單體分離','兩個子細胞','兩個子細胞','兩個子細胞','最終產物'],guide:'預測 → 操作 → 觀察 → 解釋',predict:'先預測，再以模型檢驗。',check:'提交預測',reveal:'顯示解釋',hint:'逐步提示',explain:'以自己的話解釋觀察（不作自動關鍵詞評分）',attempt:'已記錄你的預測。操作模型後，比較以下解釋。',qnext:'下一項挑戰',questions:[['M1 與 P1 是甚麼關係？',['同源染色體','姊妹染色單體'],'它們是長度與相應基因位置相同、來源不同的同源染色體。同一條 M1 複製形成的兩條染色單體才是姊妹。','點選 M1，再觀察 P1 與姊妹的標示。'],['DNA 複製後，每個細胞有多少條染色體？',['4','8'],'4 條染色體，8 個 DNA 分子。染色體以着絲點計數，複製不等於染色體數目加倍。','把進度移到複製前和複製後，比較計數。'],['減數分裂 I 分開甚麼？',['同源染色體','姊妹染色單體'],'I 分開同源染色體；II 與有絲分裂分開姊妹染色單體。I 後每細胞 2 條染色體、4 個 DNA 分子。','單步走過第一次與第二次分離。'],['減數分裂最後產生甚麼？',['四個單倍體產物','兩個二倍體子細胞'],'減數分裂產生四個單倍體產物（每個 2 條）；有絲分裂產生兩個二倍體子細胞（每個 4 條）。','開啟並排比較，移至最終產物。'],['哪個過程可產生新的染色體片段組合？',['非姊妹染色單體互換','再次複製 DNA'],'互換互相交換相應片段；獨立分配亦增加母／父源染色體組合。第二次減數分裂前沒有再次複製。','開啟互換與等位基因，再比較產物。']],footer:'細胞分裂實驗室 · 無需帳戶 · 所有模型在本機運算',noRecords:'沒有記錄可匯出',orientation:'排列',crossCSV:'互換',time:'播放進度（示意事件）'},
-en:{chromatids:'Chromatids',chromosomeChromatidCounts:'Chromosomes / chromatids',sisterHelp:'After replication, the two joined structures are sister chromatids. Once separated, each is a chromosome.',countNotation:'n = 2 means 2 chromosomes in one set; 2n = 4 means 4 in a diploid cell. Here t denotes chromatid number, not ploidy. During sister separation, the whole undivided-cell total and the per-pole count are shown separately. The temporary whole-cell total does not describe the ploidy of each forming nucleus. During replication t = 4 → 8 is a schematic range.',interphaseName:'Interphase',prophase:'Prophase',metaphase:'Metaphase',anaphase:'Anaphase',telophase:'Telophase',cytokinesis:'Cytokinesis',divisionComplete:'Division complete',observationHint:'Observation hints & counting notes',lastCheckpoint:'Last completed checkpoint',transitionNote:'Chromosomes are moving. Counts distinguish each cell from each pole; t denotes chromatid number. Pause anywhere, or use Next step to reach the next checkpoint.',reducedMotion:'Reduce motion (show checkpoints)',brand:'Cell Division Lab',eyebrow:'CH.12 / INTERACTIVE BIOLOGY',title:'Follow every chromosome',intro:'Track homologues and sister chromatids. Explore how one replication leads to two different division outcomes.',badge:'Schematic model · 2n = 4',explore:'Explore',challenge:'Guided challenge',mitosis:'Mitosis',meiosis:'Meiosis',compare:'Side-by-side',sync:'Synchronised conceptual events (not equal real time)',labels:'Labels',on:'On',off:'Off',model:'Chromosome observatory',play:'Play',pause:'Pause',step:'Next step',reset:'Reset',replay:'Replay',speed:'Playback speed (viewing only)',slow:'Slow',normal:'Normal',fast:'Fast',timeline:'Conceptual event progress',maternal:'Maternal M · solid',paternal:'Paternal P · dashed',select:'Select a chromosome to trace its homologue or sisters. Each tag is a keyboard-accessible button.',selected:'Selected',identity:'Identity',homologue:'Homologue',sister:'Sisters: the two chromatids of one replicated chromosome',settings:'Meiosis settings',pair:'Homologous pair',flip:'Flip orientation',random:'Randomise independently and replay',cross:'Demonstrate crossing over',alleles:'Show allele markers',locked:'Set orientation and crossing over before separation; replay to change them.',crosshelp:'Demonstration: one chromatid from each homologue in pair 1 exchanges corresponding distal segments reciprocally with its non-sister partner. This teaching toggle isolates a concept; organisms cannot switch it off at will.',observations:'Observations & evidence',record:'Record current state',download:'Download CSV',clear:'Clear records',empty:'No records yet. Record different events to compare them.',trial:'Record',stage:'Event',counts:'Chromosomes / DNA molecules',result:'Final combinations (per product)',scope:'Counting scope',cell:'Per cell',pole:'Per pole / forming nucleus',daughter:'Per daughter cell',product:'Per final product',chromosomes:'Chromosomes',dna:'DNA molecules',ploidy:'Ploidy',diploid:'Diploid',haploid:'Haploid',repnote:'Replication increases DNA molecules from 4 to 8. Centromeres have not separated: there are still 4 chromosomes.',sistersnote:'Once sister chromatids separate, each is a chromosome. Counts here are per pole, not for the whole undivided cell.',homologuesnote:'Meiosis I separates homologous chromosomes while sister centromeres remain joined. Chromosome number is halved here.',norep:'There is no DNA replication between the two meiotic nuclear divisions.',variation:'For n = 2 without crossing over, four maternal/paternal combinations are possible across runs. One meiosis produces only a subset; it need not produce all four.',assumptions:'Model information & sources',assumptionText:'An equal-division 2D schematic: timing and lengths are not measured human data. It does not imply that human oogenesis produces four equal functional gametes. Two matching loci carry M/P origin markers for tracing only, without linkage calculations. Spindle fibres indicate direction. Daughter-cell formation summarises nuclear re-formation and cytoplasmic division.',source:'Implemented from the supplied chapter 12 specification and bilingual glossary. te_12_c.pdf was not supplied; printed pages 12-3–12-20 and textbook figures have not been inspected. EDB documents have not been independently checked; this tool does not claim page-by-page curriculum certification.',glossary:'Bilingual glossary',stages:['Interphase: before replication','Interphase: after DNA replication','Arrangement and pairing','Pre-separation arrangement','First nuclear division: separation','First division complete','Before division II (no replication)','Second nuclear division: separation','Final products'],mitStages:['Interphase: before replication','Interphase: after DNA replication','Individual chromosome arrangement','Pre-separation arrangement','Sister chromatids separate','Two daughter cells','Two daughter cells','Two daughter cells','Final products'],guide:'Predict → operate → observe → explain',predict:'Predict first, then test with the model.',check:'Submit prediction',reveal:'Reveal explanation',hint:'Step-by-step hint',explain:'Explain your observations in your own words (no automated keyword grading)',attempt:'Your prediction is recorded. Operate the model, then compare with this explanation.',qnext:'Next challenge',questions:[['How are M1 and P1 related?',['Homologous chromosomes','Sister chromatids'],'They are homologues of matching length and gene positions, from different parents. The two chromatids formed by replication of M1 are sisters.','Select M1 and examine P1 and the sister labels.'],['After DNA replication, how many chromosomes are in each cell?',['4','8'],'4 chromosomes and 8 DNA molecules. Count by centromeres: replication does not double chromosome number.','Compare the counts before and after replication.'],['What separates in meiosis I?',['Homologous chromosomes','Sister chromatids'],'I separates homologues; II and mitosis separate sisters. After I, each cell has 2 chromosomes and 4 DNA molecules.','Step through the first and second separation events.'],['What are the final products of meiosis?',['Four haploid products','Two diploid daughter cells'],'Meiosis produces four haploid products (2 chromosomes each); mitosis produces two diploid daughters (4 each).','Use side-by-side comparison at the final event.'],['Which process creates new segment combinations?',['Crossing over between non-sister chromatids','Another DNA replication'],'Crossing over exchanges corresponding segments reciprocally. Independent assortment also varies parental combinations. No replication occurs before meiosis II.','Enable crossing over and allele markers, then compare products.']],footer:'Cell Division Lab · No account required · Models run locally',noRecords:'No records to export',orientation:'Orientation',crossCSV:'Crossing over',time:'Playback progress (schematic event)'}};
+  "zh": {
+    "chromatids": "染色單體",
+    "chromosomeChromatidCounts": "染色體 / 相連姊妹染色單體 / DNA",
+    "sisterHelp": "複製後，同一染色體的兩條相連結構是姊妹染色單體；分離後各自成為染色體。",
+    "countNotation": "n = 2 表示一套有 2 條染色體；2n = 4 表示二倍體有 4 條。依參考圖的紅字用法，本模型的 t 只計仍相連的姊妹染色單體；分離後各自稱為子染色體，t = 0。這不是說沒有 DNA：DNA 分子數另列。也有教材把單染色單體染色體計作一條染色單體，因此必須先說明定義。未複製時有 4 條單染色單體染色體、4 個 DNA 分子，但沒有相連的姊妹染色單體。t 並非通用倍性符號。分離時的整細胞總數不代表每個新細胞核的倍性。",
+    "interphaseName": "間期",
+    "prophase": "前期",
+    "metaphase": "中期",
+    "anaphase": "後期",
+    "telophase": "末期",
+    "cytokinesis": "細胞質分裂",
+    "divisionComplete": "分裂完成",
+    "observationHint": "觀察提示與計數說明",
+    "lastCheckpoint": "上一個完整檢查點",
+    "transitionNote": "染色體正在移動。計數區分每個細胞與每極；t 只計相連的姊妹染色單體。t = 0 不表示 DNA 消失。可隨時暫停或按「下一步」移至下一檢查點。",
+    "reducedMotion": "減少動態效果（逐格顯示）",
+    "brand": "細胞分裂實驗室",
+    "eyebrow": "CH.12 / 互動生物學",
+    "title": "看見染色體的每一步",
+    "intro": "追蹤同源染色體與姊妹染色單體，探索一次複製如何產生兩種不同的分裂結果。",
+    "badge": "示意模型 · 2n = 4",
+    "explore": "自由探索",
+    "challenge": "引導挑戰",
+    "mitosis": "有絲細胞分裂",
+    "meiosis": "減數細胞分裂",
+    "compare": "並排比較",
+    "sync": "同步概念事件（非相同實際時間）",
+    "labels": "標示",
+    "on": "開",
+    "off": "關",
+    "model": "染色體觀察室",
+    "play": "播放",
+    "pause": "暫停",
+    "step": "下一步",
+    "reset": "重設",
+    "replay": "重播",
+    "speed": "播放速度（僅供觀察）",
+    "slow": "慢速",
+    "normal": "標準",
+    "fast": "快速",
+    "timeline": "概念事件進度",
+    "maternal": "母源 M · 實線",
+    "paternal": "父源 P · 虛線",
+    "select": "點選染色體，追蹤其同源夥伴或姊妹。每個標籤均為可用鍵盤操作的按鈕。",
+    "selected": "已選取",
+    "identity": "身份",
+    "homologue": "同源夥伴",
+    "sister": "姊妹：同一條染色體複製後的兩條染色單體",
+    "settings": "減數分裂設定",
+    "pair": "同源對",
+    "flip": "翻轉排列",
+    "random": "獨立隨機排列並重播",
+    "cross": "示範互換",
+    "alleles": "顯示等位基因標記",
+    "locked": "排列與互換需在分離前設定；重播可重新設定。",
+    "crosshelp": "互換示範：同源對 1 各有一條非姊妹染色單體在相同位置互換遠端片段。這是隔離概念的教學設定，並非生物體可選擇的開關。",
+    "observations": "觀察與證據",
+    "record": "記錄目前狀態",
+    "download": "下載 CSV",
+    "clear": "清除記錄",
+    "empty": "尚無記錄。移至不同事件並記錄以作比較。",
+    "trial": "記錄",
+    "stage": "事件",
+    "counts": "染色體 / DNA 分子",
+    "result": "最終組合（每個產物）",
+    "scope": "計數範圍",
+    "cell": "每個細胞",
+    "pole": "每一極／形成中的細胞核",
+    "daughter": "每個子細胞",
+    "product": "每個最終產物",
+    "chromosomes": "染色體",
+    "dna": "DNA 分子",
+    "ploidy": "倍性",
+    "diploid": "二倍體",
+    "haploid": "單倍體",
+    "repnote": "複製使 DNA 分子由 4 變為 8；着絲點仍未分離，染色體仍為 4。",
+    "sistersnote": "姊妹染色單體分離後各自成為子染色體。因此相連姊妹染色單體 t = 0，但 DNA 分子仍存在；整個細胞與每極的數目分開列出。",
+    "homologuesnote": "減數分裂 I 分開同源染色體，姊妹着絲點仍相連；染色體數目在此減半。",
+    "norep": "兩次減數核分裂之間不再複製 DNA。",
+    "variation": "n = 2、沒有互換時，重複分裂可出現四種母／父源組合；單次分裂只產生其中一部分，不一定有四種。",
+    "assumptions": "模型說明與來源",
+    "assumptionText": "本模型為等分的二維示意圖，時間與長度均非人體實測數據；不表示人類卵子形成四個等大的功能性配子。等位基因在兩個相同位置以 M／P 標記，僅作追蹤；不涉及連鎖計算。紡錘絲為方向示意。成核與細胞質分裂以形成子細胞概括。",
+    "source": "依使用者提供的第 12 章規格與雙語詞彙實作；未提供 te_12_c.pdf，未核對印刷頁 12-3–12-20 或課本圖。未另行核對 EDB 文件；此工具不聲稱逐頁課程認證。",
+    "glossary": "雙語詞彙",
+    "stages": [
+      "間期：複製前",
+      "間期：DNA 複製後",
+      "排列與配對",
+      "分離前排列",
+      "第一次核分裂：分離",
+      "第一次分裂完成",
+      "第二次分裂前（無複製）",
+      "第二次核分裂：分離",
+      "最終產物"
+    ],
+    "mitStages": [
+      "間期：複製前",
+      "間期：DNA 複製後",
+      "個別染色體排列",
+      "分離前排列",
+      "姊妹染色單體分離",
+      "兩個子細胞",
+      "兩個子細胞",
+      "兩個子細胞",
+      "最終產物"
+    ],
+    "guide": "預測 → 操作 → 觀察 → 解釋",
+    "predict": "先預測，再以模型檢驗。",
+    "check": "提交預測",
+    "reveal": "顯示解釋",
+    "hint": "逐步提示",
+    "explain": "以自己的話解釋觀察（不作自動關鍵詞評分）",
+    "attempt": "已記錄你的預測。操作模型後，比較以下解釋。",
+    "qnext": "下一項挑戰",
+    "questions": [
+      [
+        "M1 與 P1 是甚麼關係？",
+        [
+          "同源染色體",
+          "姊妹染色單體"
+        ],
+        "它們是長度與相應基因位置相同、來源不同的同源染色體。同一條 M1 複製形成的兩條染色單體才是姊妹。",
+        "點選 M1，再觀察 P1 與姊妹的標示。"
+      ],
+      [
+        "DNA 複製後，每個細胞有多少條染色體？",
+        [
+          "4",
+          "8"
+        ],
+        "4 條染色體，8 個 DNA 分子。染色體以着絲點計數，複製不等於染色體數目加倍。",
+        "把進度移到複製前和複製後，比較計數。"
+      ],
+      [
+        "減數分裂 I 分開甚麼？",
+        [
+          "同源染色體",
+          "姊妹染色單體"
+        ],
+        "I 分開同源染色體；II 與有絲分裂分開姊妹染色單體。I 後每細胞 2 條染色體、4 個 DNA 分子。",
+        "單步走過第一次與第二次分離。"
+      ],
+      [
+        "減數分裂最後產生甚麼？",
+        [
+          "四個單倍體產物",
+          "兩個二倍體子細胞"
+        ],
+        "減數分裂產生四個單倍體產物（每個 2 條）；有絲分裂產生兩個二倍體子細胞（每個 4 條）。",
+        "開啟並排比較，移至最終產物。"
+      ],
+      [
+        "哪個過程可產生新的染色體片段組合？",
+        [
+          "非姊妹染色單體互換",
+          "再次複製 DNA"
+        ],
+        "互換互相交換相應片段；獨立分配亦增加母／父源染色體組合。第二次減數分裂前沒有再次複製。",
+        "開啟互換與等位基因，再比較產物。"
+      ]
+    ],
+    "footer": "細胞分裂實驗室 · 無需帳戶 · 所有模型在本機運算",
+    "noRecords": "沒有記錄可匯出",
+    "orientation": "排列",
+    "crossCSV": "互換",
+    "time": "播放進度（示意事件）",
+    "joinedSisters": "相連姊妹染色單體",
+    "countReference": "逐階段計數參考（2n = 4）",
+    "referenceExplanation": "參照你提供的人類 2n = 46 表，這裡換算為本模型 2n = 4。各列按每個細胞計；後期、末期按尚未完成細胞質分裂的整個細胞計，分裂完成後按每個子細胞計。t 只計仍相連的姊妹染色單體。分離後 t = 0 是命名慣例，不表示 DNA 消失；若把單染色單體染色體也計作一條染色單體，數目會等於本表的 DNA 分子數。",
+    "phaseCopy": {
+      "interphaseName": "細胞生長並在分裂前複製 DNA；複製後每條染色體有兩條相連的姊妹染色單體。",
+      "prophase": "染色體凝縮，紡錘絲開始形成；每條染色體的兩條姊妹染色單體仍相連。",
+      "metaphase": "染色體個別排列在細胞中央；姊妹染色單體連向相反兩極的紡錘絲。",
+      "anaphase": "着絲點分開，姊妹染色單體各自成為子染色體，移向相反兩極。",
+      "telophase": "子染色體到達兩極，新細胞核形成；每個新細胞核保留原有染色體數目。",
+      "cytokinesis": "細胞質分開，形成兩個二倍體子細胞；每個有 4 條染色體。",
+      "prophaseI": "同源染色體配對；非姊妹染色單體可在相應位置互換片段。",
+      "metaphaseI": "同源染色體成對排列在細胞中央；每對的方向可獨立改變。",
+      "anaphaseI": "同源染色體移向相反兩極；姊妹染色單體仍在着絲點相連。",
+      "telophaseI": "染色體到達兩極並形成單倍體細胞核；每條染色體仍有兩條姊妹染色單體。",
+      "cytokinesisI": "細胞質分開形成兩個單倍體子細胞；每個有 2 條染色體、4 個 DNA 分子。",
+      "prophaseII": "兩個子細胞開始第二次核分裂並形成紡錘絲；兩次分裂之間沒有 DNA 複製。",
+      "metaphaseII": "染色體個別排列在每個細胞中央；姊妹染色單體連向相反兩極。",
+      "anaphaseII": "着絲點分開，姊妹染色單體各自成為子染色體，移向相反兩極。",
+      "telophaseII": "子染色體到達兩極，形成四個單倍體細胞核。",
+      "cytokinesisII": "細胞質分開，形成四個單倍體產物；每個有 2 條染色體、2 個 DNA 分子。",
+      "divisionCompleteMitosis": "完成一次核分裂與細胞質分裂：兩個二倍體子細胞，在本模型中遺傳資料相同。",
+      "divisionCompleteMeiosis": "完成兩次核分裂與細胞質分裂：四個單倍體產物；沒有第二次 DNA 複製。"
+    },
+    "endMeiosisI": "減數分裂 I 完成（各子細胞）"
+  },
+  "en": {
+    "chromatids": "Chromatids",
+    "chromosomeChromatidCounts": "Chromosomes / joined sisters / DNA",
+    "sisterHelp": "After replication, the two joined structures are sister chromatids. Once separated, each is a chromosome.",
+    "countNotation": "n = 2 means 2 chromosomes in one set; 2n = 4 means 4 in a diploid cell. Following the red annotations in the supplied reference, t counts only joined sister chromatids. Once separated, each is called a daughter chromosome, so t = 0. DNA molecules are counted separately and do not disappear. Other texts count a single-chromatid chromosome as one chromatid, so the definition must be stated. Before replication there are 4 single-chromatid chromosomes and 4 DNA molecules, but no joined sister chromatids. t is not a universal ploidy symbol. Whole-cell totals during separation do not describe the ploidy of each forming nucleus.",
+    "interphaseName": "Interphase",
+    "prophase": "Prophase",
+    "metaphase": "Metaphase",
+    "anaphase": "Anaphase",
+    "telophase": "Telophase",
+    "cytokinesis": "Cytokinesis",
+    "divisionComplete": "Division complete",
+    "observationHint": "Observation hints & counting notes",
+    "lastCheckpoint": "Last completed checkpoint",
+    "transitionNote": "Chromosomes are moving. Counts distinguish each cell from each pole; t counts only joined sister chromatids. t = 0 does not mean DNA has disappeared. Pause anywhere, or step to the next checkpoint.",
+    "reducedMotion": "Reduce motion (show checkpoints)",
+    "brand": "Cell Division Lab",
+    "eyebrow": "CH.12 / INTERACTIVE BIOLOGY",
+    "title": "Follow every chromosome",
+    "intro": "Track homologues and sister chromatids. Explore how one replication leads to two different division outcomes.",
+    "badge": "Schematic model · 2n = 4",
+    "explore": "Explore",
+    "challenge": "Guided challenge",
+    "mitosis": "Mitosis",
+    "meiosis": "Meiosis",
+    "compare": "Side-by-side",
+    "sync": "Synchronised conceptual events (not equal real time)",
+    "labels": "Labels",
+    "on": "On",
+    "off": "Off",
+    "model": "Chromosome observatory",
+    "play": "Play",
+    "pause": "Pause",
+    "step": "Next step",
+    "reset": "Reset",
+    "replay": "Replay",
+    "speed": "Playback speed (viewing only)",
+    "slow": "Slow",
+    "normal": "Normal",
+    "fast": "Fast",
+    "timeline": "Conceptual event progress",
+    "maternal": "Maternal M · solid",
+    "paternal": "Paternal P · dashed",
+    "select": "Select a chromosome to trace its homologue or sisters. Each tag is a keyboard-accessible button.",
+    "selected": "Selected",
+    "identity": "Identity",
+    "homologue": "Homologue",
+    "sister": "Sisters: the two chromatids of one replicated chromosome",
+    "settings": "Meiosis settings",
+    "pair": "Homologous pair",
+    "flip": "Flip orientation",
+    "random": "Randomise independently and replay",
+    "cross": "Demonstrate crossing over",
+    "alleles": "Show allele markers",
+    "locked": "Set orientation and crossing over before separation; replay to change them.",
+    "crosshelp": "Demonstration: one chromatid from each homologue in pair 1 exchanges corresponding distal segments reciprocally with its non-sister partner. This teaching toggle isolates a concept; organisms cannot switch it off at will.",
+    "observations": "Observations & evidence",
+    "record": "Record current state",
+    "download": "Download CSV",
+    "clear": "Clear records",
+    "empty": "No records yet. Record different events to compare them.",
+    "trial": "Record",
+    "stage": "Event",
+    "counts": "Chromosomes / DNA molecules",
+    "result": "Final combinations (per product)",
+    "scope": "Counting scope",
+    "cell": "Per cell",
+    "pole": "Per pole / forming nucleus",
+    "daughter": "Per daughter cell",
+    "product": "Per final product",
+    "chromosomes": "Chromosomes",
+    "dna": "DNA molecules",
+    "ploidy": "Ploidy",
+    "diploid": "Diploid",
+    "haploid": "Haploid",
+    "repnote": "Replication increases DNA molecules from 4 to 8. Centromeres have not separated: there are still 4 chromosomes.",
+    "sistersnote": "Separated sisters are now daughter chromosomes. Joined sister chromatids t = 0, but their DNA molecules remain. Whole-cell and per-pole counts are listed separately.",
+    "homologuesnote": "Meiosis I separates homologous chromosomes while sister centromeres remain joined. Chromosome number is halved here.",
+    "norep": "There is no DNA replication between the two meiotic nuclear divisions.",
+    "variation": "For n = 2 without crossing over, four maternal/paternal combinations are possible across runs. One meiosis produces only a subset; it need not produce all four.",
+    "assumptions": "Model information & sources",
+    "assumptionText": "An equal-division 2D schematic: timing and lengths are not measured human data. It does not imply that human oogenesis produces four equal functional gametes. Two matching loci carry M/P origin markers for tracing only, without linkage calculations. Spindle fibres indicate direction. Daughter-cell formation summarises nuclear re-formation and cytoplasmic division.",
+    "source": "Implemented from the supplied chapter 12 specification and bilingual glossary. te_12_c.pdf was not supplied; printed pages 12-3–12-20 and textbook figures have not been inspected. EDB documents have not been independently checked; this tool does not claim page-by-page curriculum certification.",
+    "glossary": "Bilingual glossary",
+    "stages": [
+      "Interphase: before replication",
+      "Interphase: after DNA replication",
+      "Arrangement and pairing",
+      "Pre-separation arrangement",
+      "First nuclear division: separation",
+      "First division complete",
+      "Before division II (no replication)",
+      "Second nuclear division: separation",
+      "Final products"
+    ],
+    "mitStages": [
+      "Interphase: before replication",
+      "Interphase: after DNA replication",
+      "Individual chromosome arrangement",
+      "Pre-separation arrangement",
+      "Sister chromatids separate",
+      "Two daughter cells",
+      "Two daughter cells",
+      "Two daughter cells",
+      "Final products"
+    ],
+    "guide": "Predict → operate → observe → explain",
+    "predict": "Predict first, then test with the model.",
+    "check": "Submit prediction",
+    "reveal": "Reveal explanation",
+    "hint": "Step-by-step hint",
+    "explain": "Explain your observations in your own words (no automated keyword grading)",
+    "attempt": "Your prediction is recorded. Operate the model, then compare with this explanation.",
+    "qnext": "Next challenge",
+    "questions": [
+      [
+        "How are M1 and P1 related?",
+        [
+          "Homologous chromosomes",
+          "Sister chromatids"
+        ],
+        "They are homologues of matching length and gene positions, from different parents. The two chromatids formed by replication of M1 are sisters.",
+        "Select M1 and examine P1 and the sister labels."
+      ],
+      [
+        "After DNA replication, how many chromosomes are in each cell?",
+        [
+          "4",
+          "8"
+        ],
+        "4 chromosomes and 8 DNA molecules. Count by centromeres: replication does not double chromosome number.",
+        "Compare the counts before and after replication."
+      ],
+      [
+        "What separates in meiosis I?",
+        [
+          "Homologous chromosomes",
+          "Sister chromatids"
+        ],
+        "I separates homologues; II and mitosis separate sisters. After I, each cell has 2 chromosomes and 4 DNA molecules.",
+        "Step through the first and second separation events."
+      ],
+      [
+        "What are the final products of meiosis?",
+        [
+          "Four haploid products",
+          "Two diploid daughter cells"
+        ],
+        "Meiosis produces four haploid products (2 chromosomes each); mitosis produces two diploid daughters (4 each).",
+        "Use side-by-side comparison at the final event."
+      ],
+      [
+        "Which process creates new segment combinations?",
+        [
+          "Crossing over between non-sister chromatids",
+          "Another DNA replication"
+        ],
+        "Crossing over exchanges corresponding segments reciprocally. Independent assortment also varies parental combinations. No replication occurs before meiosis II.",
+        "Enable crossing over and allele markers, then compare products."
+      ]
+    ],
+    "footer": "Cell Division Lab · No account required · Models run locally",
+    "noRecords": "No records to export",
+    "orientation": "Orientation",
+    "crossCSV": "Crossing over",
+    "time": "Playback progress (schematic event)",
+    "joinedSisters": "Joined sister chromatids",
+    "countReference": "Phase-by-phase count reference (2n = 4)",
+    "referenceExplanation": "Adapted from your human 2n = 46 reference to this 2n = 4 model. Each row counts one whole cell before cytoplasmic division, or each daughter after division. Here t counts only sister chromatids still joined together. After separation, t = 0 is a naming convention, not loss of DNA. Texts that count a single-chromatid chromosome as one chromatid would instead use the DNA-molecule column for that count.",
+    "phaseCopy": {
+      "interphaseName": "The cell grows and replicates DNA before division. Each replicated chromosome has two joined sister chromatids.",
+      "prophase": "Chromosomes condense and spindle fibres form. The two sister chromatids of each chromosome remain joined.",
+      "metaphase": "Chromosomes align individually at the cell equator; sister chromatids attach to spindle fibres from opposite poles.",
+      "anaphase": "Centromeres separate. Sister chromatids become daughter chromosomes and move to opposite poles.",
+      "telophase": "Daughter chromosomes reach the poles and new nuclei form, each retaining the original chromosome number.",
+      "cytokinesis": "The cytoplasm divides, forming two diploid daughter cells with 4 chromosomes each.",
+      "prophaseI": "Homologous chromosomes pair. Non-sister chromatids may exchange corresponding segments by crossing over.",
+      "metaphaseI": "Homologous pairs align at the cell equator. Each pair can orient independently of the other pair.",
+      "anaphaseI": "Homologous chromosomes move to opposite poles; sister chromatids remain joined at their centromeres.",
+      "telophaseI": "Chromosomes reach the poles and haploid nuclei form. Each chromosome still has two sister chromatids.",
+      "cytokinesisI": "The cytoplasm divides into two haploid cells, each with 2 chromosomes and 4 DNA molecules.",
+      "prophaseII": "The two cells begin the second nuclear division and form spindle fibres. There is no DNA replication between divisions.",
+      "metaphaseII": "Chromosomes align individually at each cell equator; sister chromatids attach towards opposite poles.",
+      "anaphaseII": "Centromeres separate. Sister chromatids become daughter chromosomes and move to opposite poles.",
+      "telophaseII": "Daughter chromosomes reach the poles and four haploid nuclei form.",
+      "cytokinesisII": "The cytoplasm divides, forming four haploid products, each with 2 chromosomes and 2 DNA molecules.",
+      "divisionCompleteMitosis": "One nuclear division and cytoplasmic division are complete: two diploid daughters with matching genetic information in this model.",
+      "divisionCompleteMeiosis": "Two nuclear divisions and cytoplasmic division are complete: four haploid products, without a second DNA replication."
+    },
+    "endMeiosisI": "End of meiosis I (each daughter)"
+  }
+};
 
 
 // Positions are schematic. Every chromatid retains the same key for the entire run.
@@ -202,13 +593,14 @@ let timer, previousTime=null, animationTarget=8;const t=k=>dict[lang][k],esc=x=>
 const btn=(id,key,active=false)=>`<button id="${id}" class="${active?'active':''}">${t(key)}</button>`;
 const stage=(kind,e)=>t(kind==='mitosis'?'mitStages':'stages')[e];
 const phaseName=(kind,position)=>{const phase=phaseAt(kind,position);return t(phase.key)+(phase.division?' '+phase.division:'');};
+const phaseDescription=(kind,position)=>{const phase=phaseAt(kind,position);const key=phase.key==='divisionComplete'?phase.key+(kind==='mitosis'?'Mitosis':'Meiosis'):phase.key+phase.division;return t('phaseCopy')[key];};
 const colour=o=>o==='M'?'#b65e45':'#437da1';
 const svgViews = new WeakMap();
 function drawing(kind) {
-  return `<div class="model"><h3>${t(kind)}</h3><div class="scene-window"><svg data-kind="${kind}" viewBox="0 0 600 440" role="group"></svg><span class="phase-label" data-phase="${kind}"></span></div><div class="count" data-count="${kind}"></div></div>`;
+  return `<div class="model"><h3>${t(kind)}</h3><div class="scene-window"><svg data-kind="${kind}" viewBox="0 -110 600 550" role="group"></svg><span class="phase-label" data-phase="${kind}"></span></div><div class="count" data-count="${kind}"></div></div>`;
 }
 function fitAnnotations(svg) {
-  const box=svg.getBoundingClientRect(),scale=Math.min(box.width/600,box.height/440);
+  const box=svg.getBoundingClientRect(),scale=Math.min(box.width/600,box.height/550);
   if(scale>0){svg.style.setProperty('--annotation-size',Math.max(11,8.5/scale)+'px');svg.style.setProperty('--allele-size',Math.max(10,8/scale)+'px');}
 }
 function initialiseScene(svg) {
@@ -263,11 +655,11 @@ function paint() {
   for(const kind of ['mitosis','meiosis']) {
     const count=document.querySelector(`[data-count="${kind}"]`);if(!count)continue;
     const info=countsAt(kind,s.position);
-    count.innerHTML=`<span>${t('chromosomes')}: <strong>${info.notation}</strong></span><span>${t('chromatids')}: <strong>t = ${info.count[1]}</strong></span><span class="count-scope">${t('cell')}</span>${info.perPole?`<span class="pole-count">${t('pole')}: ${info.perPole.notation}, t = ${info.perPole.count[1]}</span>`:''}`;
+    count.innerHTML=`<span>${t('chromosomes')}: <strong>${info.notation}</strong></span><span>${t('joinedSisters')}: <strong>t = ${info.chromatids}</strong></span><span class="count-scope">${t('cell')} · ${t('dna')}: ${info.count[1]}</span>${info.perPole?`<span class="pole-count">${t('pole')}: ${info.perPole.notation}, t = ${info.perPole.chromatids} · ${t('dna')}: ${info.perPole.count[1]}</span>`:''}`;
   }
   const small=document.querySelector('.stage small'),title=document.querySelector('.stage b');
   small.textContent=`${String(s.event+1).padStart(2,'0')} / 09`;
-  title.textContent=moving?`${stage(s.kind,s.event)} → ${stage(s.kind,Math.min(8,s.event+1))}`:stage(s.kind,s.event);
+  title.textContent=t(s.kind)+' · '+phaseDescription(s.kind,s.reduced?Math.floor(s.position):s.position);
   document.getElementById('model-note').textContent=moving?t('transitionNote'):note();
   document.getElementById('timeline').value=s.position;
   document.getElementById('timeline').setAttribute('aria-valuetext',title.textContent);
@@ -281,9 +673,9 @@ function render(){const retained=new Map([...document.querySelectorAll('svg[data
  document.getElementById('app').innerHTML=`<div class="intro"><div><div class="eyebrow">${t('eyebrow')}</div><h1>${t('title')}</h1><p>${t('intro')}</p></div><span class="pill">${t('badge')}</span></div><nav class="toolbar" aria-label="${t('model')}">${btn('explore','explore',s.mode==='explore')}${btn('challenge','challenge',s.mode==='challenge')}<span style="flex:1"></span>${btn('mitosis','mitosis',s.kind==='mitosis')}${btn('meiosis','meiosis',s.kind==='meiosis')}${btn('compare','compare',s.compare)}</nav>
  <div class="layout"><section class="card"><div class="cardhead"><h2>${t('model')}</h2><button id="labels" aria-pressed="${s.labels}">${t('labels')}: ${t(s.labels?'on':'off')}</button></div><div class="stage"><small>${String(s.event+1).padStart(2,'0')} / 09</small> <b>${stage(s.kind,s.event)}</b></div>${s.compare?`<div class="muted" style="padding:0 20px">${t('sync')}</div>`:''}<div class="modelgrid ${s.compare?'compare':''}">${s.compare?drawing('mitosis')+drawing('meiosis'):drawing(s.kind)}</div><div class="legend"><span><i class="dot"></i>${t('maternal')}</span><span><i class="dot p"></i>${t('paternal')}</span><span>● ${terms[5][lang==='zh'?0:1]}</span></div><div class="transport"><div class="row">${btn('play',s.playing?'pause':'play',s.playing)}${btn('step','step')}${btn('replay','replay')}${btn('reset','reset')}<label for="speed" class="muted">${t('speed')}</label><select id="speed"><option value="4200" ${s.speed===4200?'selected':''}>${t('slow')}</option><option value="2400" ${s.speed===2400?'selected':''}>${t('normal')}</option><option value="1200" ${s.speed===1200?'selected':''}>${t('fast')}</option></select></div><input id="timeline" type="range" min="0" max="8" step="0.001" value="${s.position}" aria-label="${t('timeline')}"/><div class="events"><span>${t('stages')[0]}</span><span>${t('stages')[4]}</span><span>${t('stages')[8]}</span></div></div><details class="observation-note"><summary>${t('observationHint')}</summary><div class="notice" id="model-note">${note()}</div></details></section>
  <aside class="sidebar"><section class="card panel"><h2>${t('settings')}</h2>${[0,1].map(i=>`<div class="control"><label>${t('pair')} ${i+1} <b>${s.flips[i]?'P | M':'M | P'}</b></label><button id="flip${i}" ${s.event>=4?'disabled':''}>↔ ${t('flip')}</button></div>`).join('')}<div class="control"><label><input id="cross" type="checkbox" ${s.cross?'checked':''} ${s.event>=4?'disabled':''}>${t('cross')}</label></div><div class="control"><label><input id="reduced" type="checkbox" ${s.reduced?'checked':''}>${t('reducedMotion')}</label></div><div class="control"><label><input id="alleles" type="checkbox" ${s.alleles?'checked':''}>${t('alleles')}</label></div>${btn('random','random')}<p>${t('locked')}</p><details><summary>${t('cross')}</summary><p>${t('crosshelp')}</p></details></section><section class="card panel"><h2>${t('selected')}</h2><p>${s.selected?`${t('identity')}: <b>${s.selected}</b><br>${t('homologue')}: <b>${s.selected[0]==='M'?'P':'M'}${s.selected[1]}</b><br>${t('sisterHelp')}`:t('select')}</p></section></aside></div>
- <div class="below"><section class="card panel"><h2>${t('observations')}</h2><div class="row">${btn('record','record')}${btn('download','download')}${btn('clear','clear')}</div>${s.records.length?`<div class="scroll"><table><thead><tr><th>${t('trial')}</th><th>${t('stage')}</th><th>${t('chromosomeChromatidCounts')}</th><th>${t('result')}</th></tr></thead><tbody>${s.records.map((r,i)=>`<tr><td>${i+1}<br>${t(r.kind)}<br>${t('crossCSV')}: ${t(r.cross?'on':'off')}<br>${r.flips.map(x=>x?'P|M':'M|P').join(' / ')}</td><td>${phaseName(r.kind,r.position)}<br>${t('time')}: ${r.position.toFixed(3)}</td><td>${r.counting.notation} / t = ${r.counting.count[1]}<br>${t('cell')}${r.counting.perPole?`<br>${t('pole')}: ${r.counting.perPole.notation}, t = ${r.counting.perPole.count[1]}`:''}</td><td>${r.event===8?r.snap.cells.map(c=>c.map(a=>`${a.id} [${a.loci.join('·')}]`).join(' + ')).join('<br>'):'—'}</td></tr>`).join('')}</tbody></table></div>`:`<p class="muted">${t('empty')}</p>`}</section>
+ <div class="below"><section class="card panel"><h2>${t('observations')}</h2><div class="row">${btn('record','record')}${btn('download','download')}${btn('clear','clear')}</div>${s.records.length?`<div class="scroll"><table data-records><thead><tr><th>${t('trial')}</th><th>${t('stage')}</th><th>${t('chromosomeChromatidCounts')}</th><th>${t('result')}</th></tr></thead><tbody>${s.records.map((r,i)=>`<tr><td>${i+1}<br>${t(r.kind)}<br>${t('crossCSV')}: ${t(r.cross?'on':'off')}<br>${r.flips.map(x=>x?'P|M':'M|P').join(' / ')}</td><td>${phaseName(r.kind,r.position)}<br>${t('time')}: ${r.position.toFixed(3)}</td><td>${r.counting.notation} / t = ${r.counting.chromatids}<br>${t('cell')} · ${t('dna')}: ${r.counting.count[1]}${r.counting.perPole?`<br>${t('pole')}: ${r.counting.perPole.notation}, t = ${r.counting.perPole.chromatids} · ${t('dna')}: ${r.counting.perPole.count[1]}`:''}</td><td>${r.event===8?r.snap.cells.map(c=>c.map(a=>`${a.id} [${a.loci.join('·')}]`).join(' + ')).join('<br>'):'—'}</td></tr>`).join('')}</tbody></table></div>`:`<p class="muted">${t('empty')}</p>`}</section>
  <section class="card panel" ${s.mode!=='challenge'?'hidden':''}><div class="eyebrow">${s.q+1} / 5</div><h2>${t('guide')}</h2><h3>${q[0]}</h3><p>${t('predict')}</p><div class="qoptions">${q[1].map((a,i)=>`<button data-choice="${i}" class="${s.choice===i?'active':''}">${a}</button>`).join('')}</div><div class="row">${btn('check','check')}${btn('hint','hint')}${btn('reveal','reveal')}</div>${s.hint?`<p class="notice">${q[3]}${s.hint>1?' '+t('predict'):''}</p>`:''}${s.attempt||s.reveal?`<div class="feedback">${s.attempt?t('attempt')+'<br>':''}${q[2]}</div>`:''}<label for="response"><p>${t('explain')}</p></label><textarea id="response">${esc(s.response)}</textarea>${btn('qnext','qnext')}</section></div>
- <section class="card panel" style="margin-top:20px"><details><summary>${t('assumptions')}</summary><p>${t('countNotation')}</p><p>${t('assumptionText')}</p><p>${t('source')}</p><p>${t('crosshelp')}</p><p>${t('variation')}</p></details><details style="margin-top:12px"><summary>${t('glossary')}</summary><div class="terms">${terms.map(a=>`<span>${a[lang==='zh'?0:1]} — ${a[lang==='zh'?1:0]}</span>`).join('')}</div></details></section><footer>${t('footer')}</footer>`;
+ <section class="card panel" style="margin-top:20px"><details><summary>${t('countReference')}</summary><p>${t('referenceExplanation')}</p><div class="scroll"><table data-count-reference><thead><tr><th>${t('stage')}</th><th>${t('chromosomes')}</th><th>${t('joinedSisters')} (t)</th><th>${t('dna')}</th></tr></thead><tbody>${referenceStages.map(([kind,position])=>{const info=countsAt(kind,position);return `<tr><td>${t(kind)} · ${position===5&&kind==='meiosis'?t('endMeiosisI'):phaseName(kind,position)}</td><td>${info.count[0]}</td><td>${info.chromatids}</td><td>${info.count[1]}</td></tr>`}).join('')}</tbody></table></div></details><details style="margin-top:12px"><summary>${t('assumptions')}</summary><p>${t('countNotation')}</p><p>${t('assumptionText')}</p><p>${t('source')}</p><p>${t('crosshelp')}</p><p>${t('variation')}</p></details><details style="margin-top:12px"><summary>${t('glossary')}</summary><div class="terms">${terms.map(a=>`<span>${a[lang==='zh'?0:1]} — ${a[lang==='zh'?1:0]}</span>`).join('')}</div></details></section><footer>${t('footer')}</footer>`;
  for(const svg of document.querySelectorAll('svg[data-kind]')){const old=retained.get(svg.dataset.kind);if(old)svg.replaceWith(old);}
  bind();paint();document.querySelectorAll('svg[data-kind]').forEach(fitAnnotations);if(focused)document.getElementById(focused)?.focus({preventScroll:true});}
 function stop(){s.playing=false;cancelAnimationFrame(timer);previousTime=null;}
@@ -297,7 +689,7 @@ function frameTick(now) {
 }
 function start(target=8){stop();if(s.position>=8)s.position=0;animationTarget=target;s.playing=true;timer=requestAnimationFrame(frameTick);}
 function step(){stop();const next=Math.min(8,Math.floor(s.position+1e-8)+1);if(s.reduced)s.position=next;else start(next);}
-function csv(){if(!s.records.length)return;const rows=[[t('trial'),t('mitosis')+'/'+t('meiosis'),t('stage'),t('scope'),t('chromosomes'),t('chromatids'),t('orientation'),t('crossCSV'),t('result'),t('time')],...s.records.map((r,i)=>[i+1,t(r.kind),phaseName(r.kind,r.position),t('cell'),...r.counting.count,r.flips.map(x=>x?'P|M':'M|P').join(';'),t(r.cross?'on':'off'),JSON.stringify(r.snap.cells),r.position])];const blob=new Blob(['\ufeff'+rows.map(row=>row.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=lang==='zh'?'細胞分裂觀察.csv':'cell-division-observations.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+function csv(){if(!s.records.length)return;const rows=[[t('trial'),t('mitosis')+'/'+t('meiosis'),t('stage'),t('scope'),t('chromosomes'),t('joinedSisters')+' (t)',t('dna'),t('orientation'),t('crossCSV'),t('result'),t('time')],...s.records.map((r,i)=>[i+1,t(r.kind),phaseName(r.kind,r.position),t('cell'),r.counting.count[0],r.counting.chromatids,r.counting.count[1],r.flips.map(x=>x?'P|M':'M|P').join(';'),t(r.cross?'on':'off'),JSON.stringify(r.snap.cells),r.position])];const blob=new Blob(['\ufeff'+rows.map(row=>row.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=lang==='zh'?'細胞分裂觀察.csv':'cell-division-observations.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
 function bind(){const on=(id,fn)=>{const el=document.getElementById(id);if(el)el.onclick=()=>{fn();render()}};['explore','challenge'].forEach(m=>on(m,()=>s.mode=m));['mitosis','meiosis'].forEach(k=>on(k,()=>s.kind=k));on('compare',()=>s.compare=!s.compare);on('labels',()=>s.labels=!s.labels);on('play',()=>s.playing?stop():start());on('step',step);on('replay',()=>{stop();s.event=0;s.position=0});on('reset',()=>{stop();Object.assign(s,{event:0,position:0,flips:[false,false],cross:false,selected:null})});on('random',()=>{stop();s.flips=[Math.random()<.5,Math.random()<.5];s.event=0;s.position=0});[0,1].forEach(i=>on('flip'+i,()=>s.flips[i]=!s.flips[i]));on('record',()=>s.records.push(structuredClone({kind:s.kind,event:s.event,position:s.position,frame:sceneAt(s.kind,s.position,s.flips,s.cross),counting:countsAt(s.kind,s.position),flips:s.flips,cross:s.kind==='meiosis'&&s.cross,snap:snapshot(s.kind,s.event,s.flips,s.cross),elapsedEvent:s.position,selection:s.selected})));on('clear',()=>s.records=[]);on('download',csv);on('check',()=>{if(s.choice!==null)s.attempt=true});document.getElementById('check').disabled=s.choice===null;document.getElementById('download').disabled=!s.records.length;on('hint',()=>s.hint++);on('reveal',()=>s.reveal=true);on('qnext',()=>{s.q=(s.q+1)%5;Object.assign(s,{choice:null,attempt:false,reveal:false,hint:0,response:''})});document.getElementById('response').oninput=e=>s.response=e.target.value;document.getElementById('timeline').oninput=e=>{stop();s.position=+e.target.value;paint()};document.getElementById('speed').onchange=e=>{s.speed=+e.target.value;paint()};['cross','alleles','reduced'].forEach(k=>document.getElementById(k).onchange=e=>{s[k]=e.target.checked;render()});document.querySelectorAll('[data-choice]').forEach(el=>el.onclick=()=>{s.choice=+el.dataset.choice;render()});document.querySelectorAll('[data-chrom]').forEach(el=>{const choose=()=>{s.selected=el.dataset.chrom;render()};el.onclick=choose;el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();choose()}}});}
 ['zh','en'].forEach(l=>document.getElementById(l).onclick=()=>{lang=l;try{localStorage.setItem('cell-language',l)}catch{}render()});
 render();

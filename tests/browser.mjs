@@ -1,6 +1,7 @@
 // Optional browser check: install Playwright outside the checkout, then set
 // PLAYWRIGHT_MODULE to its package entry point and CHROMIUM_PATH if needed.
 import assert from 'node:assert/strict';
+import {dict} from '../i18n.mjs';
 import {readFile} from 'node:fs/promises';
 const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright');
 const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||undefined,args:['--no-sandbox']});
@@ -28,8 +29,8 @@ try {
   await page.locator('#zh').click();assert.equal(await position(),paused);
   assert.equal(await page.evaluate(()=>window.tracked===document.querySelector('[data-kind="mitosis"] [data-strand="M1-s0"]')),true,'SVG nodes survive renders');
   await page.locator('#labels').click();assert.equal(await position(),paused);
-  await page.locator('#record').click();const record=await page.locator('tbody').innerText();
-  await seek(0);await page.locator('#flip0').click();assert.equal(await page.locator('tbody').innerText(),record);
+  await page.locator('#record').click();const record=await page.locator('[data-records] tbody').innerText();
+  await seek(0);await page.locator('#flip0').click();assert.equal(await page.locator('[data-records] tbody').innerText(),record);
   await seek(3.4);
   await page.locator('#en').click();
   await page.locator('#speed').selectOption('1200');
@@ -62,12 +63,17 @@ try {
       await seek(value);
       if(language==='en')assert.equal(await page.locator('[data-phase="meiosis"]').innerText(),label);
       else assert.ok(!(await page.locator('[data-phase="meiosis"]').innerText()).includes('phase'));
+      const copyKey=label[0].toLowerCase()+label.slice(1).replaceAll(' ','');
+      assert.equal(await page.locator('.stage b').innerText(),dict[language].meiosis+' · '+dict[language].phaseCopy[copyKey]);
       const box=await page.locator('.transport').boundingBox();
       assert.ok(box.y>=0&&box.y+box.height<=768,'playback and scrubber must fit the viewport');
     }
   }
   assert.equal(await page.locator('.origin-label').filter({hasText:/s[01]/}).count(),0);
-  assert.ok((await page.locator('[data-count="meiosis"]').innerText()).includes('t = 4'));
+  assert.ok((await page.locator('[data-count="meiosis"]').innerText()).includes('t = 0'));
+  await seek(2.5);assert.ok((await page.locator('[data-count="meiosis"]').innerText()).includes('t = 8'));
+  await seek(8);assert.ok((await page.locator('[data-count="meiosis"]').innerText()).includes('t = 0'));
+  assert.ok((await page.locator('[data-count="meiosis"]').innerText()).includes('2'));
   const reduced=await browser.newPage({reducedMotion:'reduce'});
   await reduced.goto(process.env.BASE_URL||'http://127.0.0.1:8000');
   assert.equal(await reduced.locator('#reduced').isChecked(),true);
