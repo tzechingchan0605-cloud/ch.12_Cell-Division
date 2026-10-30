@@ -2,6 +2,7 @@
 // PLAYWRIGHT_MODULE to its package entry point and CHROMIUM_PATH if needed.
 import assert from 'node:assert/strict';
 import {dict} from '../i18n.mjs';
+import {phaseSource} from '../phases.mjs';
 import {readFile} from 'node:fs/promises';
 const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright');
 const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||undefined,args:['--no-sandbox']});
@@ -63,6 +64,7 @@ try {
       await seek(value);
       if(language==='en')assert.equal(await page.locator('[data-phase="meiosis"]').innerText(),label);
       else assert.ok(!(await page.locator('[data-phase="meiosis"]').innerText()).includes('phase'));
+      assert.equal(await page.locator('.stage small').innerText(),(dict[language].pagePrefix+phaseSource('meiosis',value)).trim());
       const copyKey=label[0].toLowerCase()+label.slice(1).replaceAll(' ','');
       assert.equal(await page.locator('.stage b').innerText(),dict[language].meiosis+' · '+dict[language].phaseCopy[copyKey]);
       const box=await page.locator('.transport').boundingBox();

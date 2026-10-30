@@ -84,10 +84,10 @@ function membranesAt(kind, position) {
 function nucleiAt(kind,p) {
   const first=ease((p-4)/.3)*(kind==='meiosis'?1-ease((p-5)/.45):1);
   const second=kind==='meiosis'?ease((p-7)/.3):0;
-  return [115,325].flatMap((cy,i)=>[
+  return [{key:'parent-nucleus',path:boundary(300,220,245,165),opacity:1-ease(p-1)},...[115,325].flatMap((cy,i)=>[
     {key:`first-${i}`,path:boundary(300,cy,248,67),opacity:first},
     ...[155,445].map((cx,j)=>({key:`second-${i}-${j}`,path:boundary(cx,cy,110,65),opacity:second}))
-  ]);
+  ])];
 }
 
 export function sceneAt(kind, position, flips = [false,false], crossing = false) {
@@ -106,7 +106,7 @@ export function sceneAt(kind, position, flips = [false,false], crossing = false)
       recipient: exchanged===1 ? partner : a.key};
   });
   const attached = kind==='mitosis' ? 1-ease(p-3) : 1-ease(p-6);
-  const spindleI = ease(p-2)*(1-ease(p-4));
+  const spindleI = ease(p-1)*(1-ease(p-4));
   const spindleII = kind==='meiosis' ? ease(p-5)*(1-ease(p-7)) : 0;
   const spindles = strands.map(a=>{
     const pole = (a.origin==='M')!==flips[a.pair-1] ? 0 : 1;
@@ -115,5 +115,6 @@ export function sceneAt(kind, position, flips = [false,false], crossing = false)
     if(p>=5 && kind==='meiosis'){ x=a.sister===0?25:575; y=pole===0?115:325; opacity=spindleII; }
     return {key:a.key,x,y,toX:a.x,toY:a.y,opacity:opacity*a.opacity};
   });
-  return {position:p,strands,distal,membranes:membranesAt(kind,p),nuclei:nucleiAt(kind,p),spindles,attached};
+  const chromatin=Math.max(1-ease(p-1),kind==='mitosis'?ease((p-4)/.6):ease((p-7)/.6));
+  return {position:p,chromatin,strands,distal,membranes:membranesAt(kind,p),nuclei:nucleiAt(kind,p),spindles,attached};
 }

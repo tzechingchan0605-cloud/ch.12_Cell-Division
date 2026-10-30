@@ -1,6 +1,6 @@
 import {snapshot,countsAt,referenceStages} from './model.mjs';
 import {sceneAt,advancePosition} from './animation.mjs';
-import {phaseAt} from './phases.mjs';
+import {phaseAt,phaseSource} from './phases.mjs';
 import {dict,terms} from './i18n.mjs';
 let lang;try{lang=localStorage.getItem('cell-language')}catch{}if(!dict[lang])lang='zh';
 const s={kind:'meiosis',event:0,position:0,reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,flips:[false,false],cross:false,labels:true,alleles:false,compare:false,mode:'explore',playing:false,speed:2400,selected:null,records:[],q:0,choice:null,attempt:false,hint:0,reveal:false,response:''};
@@ -33,6 +33,17 @@ function initialiseScene(svg) {
 function setAttributes(node, attributes) {
   for(const [name,value] of Object.entries(attributes)) node.setAttribute(name,value);
 }
+// Identity traces remain original schematic geometry rather than textbook art.
+function traceBetween(a,b,amount) {
+  const dx=b.x-a.x,dy=b.y-a.y,length=Math.hypot(dx,dy)||1;
+  return Array.from({length:9},(_,i)=>{const f=i/8,w=Math.sin(f*Math.PI*4)*3*amount;
+    return `${i?'L':'M'} ${a.x+dx*f-dy/length*w} ${a.y+dy*f+dx/length*w}`;
+  }).join(' ');
+}
+function strandTrace(a,distal,chromatin) {
+  const centre={x:a.x,y:a.y},top={x:a.x+a.topX,y:a.y+a.topY},cut={x:a.x+a.bottomX*.4,y:a.y+a.bottomY*.4},bottom={x:a.x+a.bottomX,y:a.y+a.bottomY};
+  return distal?traceBetween(cut,bottom,chromatin):traceBetween(top,centre,chromatin)+' '+traceBetween(centre,cut,chromatin).replace(/^M/,'L');
+}
 function paintDrawing(svg) {
   const kind=svg.dataset.kind,view=svgViews.get(svg)||initialiseScene(svg);
   const position=s.reduced?Math.floor(s.position+1e-8):s.position;
@@ -49,7 +60,7 @@ function paintDrawing(svg) {
     const labelOpacity=a.sister===0?1:1-frame.attached;
     node.classList.toggle('selected',selected);node.classList.toggle('related',!selected&&related);
     setAttributes(node,{opacity:a.opacity,tabindex:a.opacity<.01?-1:0,'aria-hidden':a.opacity<.01,'aria-label':`${t('identity')} ${a.id}; ${t('homologue')} ${a.origin==='M'?'P':'M'}${a.pair}`});
-    setAttributes(node.querySelector('.proximal'),{d:`M ${a.x+a.topX} ${a.y+a.topY} L ${a.x} ${a.y} L ${a.x+a.bottomX*.4} ${a.y+a.bottomY*.4}`,stroke:colour(a.origin),'stroke-dasharray':a.origin==='P'?'6 3':''});
+    setAttributes(node.querySelector('.proximal'),{d:strandTrace(a,false,frame.chromatin),stroke:colour(a.origin),'stroke-width':7-3*frame.chromatin,'stroke-dasharray':a.origin==='P'?'6 3':''});
     setAttributes(node.querySelector('.centromere'),{cx:a.x,cy:a.y,opacity:labelOpacity});
     setAttributes(label,{x:a.x,y:a.y+a.length/2+17,opacity:s.labels?labelOpacity:0});
     label.textContent=a.id;
@@ -59,7 +70,7 @@ function paintDrawing(svg) {
   for(const a of frame.distal) {
     const node=view.segments.get(a.key);
     setAttributes(node,{opacity:a.opacity});
-    setAttributes(node.querySelector('path'),{d:`M ${a.x+a.bottomX*.4} ${a.y+a.bottomY*.4} L ${a.x+a.bottomX} ${a.y+a.bottomY}`,stroke:colour(a.origin),'stroke-dasharray':a.origin==='P'?'6 3':''});
+    setAttributes(node.querySelector('path'),{d:strandTrace(a,true,frame.chromatin),stroke:colour(a.origin),'stroke-width':7-3*frame.chromatin,'stroke-dasharray':a.origin==='P'?'6 3':''});
     const allele=node.querySelector('text');setAttributes(allele,{x:a.x+a.bottomX+6,y:a.y+a.bottomY*.9,opacity:s.alleles?1:0});allele.textContent=a.origin+'b';
   }
 }
@@ -73,7 +84,7 @@ function paint() {
     count.innerHTML=`<span>${t('chromosomes')}: <strong>${info.notation}</strong></span><span>${t('joinedSisters')}: <strong>t = ${info.chromatids}</strong></span><span class="count-scope">${t('cell')} · ${t('dna')}: ${info.count[1]}</span>${info.perPole?`<span class="pole-count">${t('pole')}: ${info.perPole.notation}, t = ${info.perPole.chromatids} · ${t('dna')}: ${info.perPole.count[1]}</span>`:''}`;
   }
   const small=document.querySelector('.stage small'),title=document.querySelector('.stage b');
-  small.textContent=`${String(s.event+1).padStart(2,'0')} / 09`;
+  small.textContent=t('pagePrefix')+phaseSource(s.kind,s.reduced?Math.floor(s.position):s.position);
   title.textContent=t(s.kind)+' · '+phaseDescription(s.kind,s.reduced?Math.floor(s.position):s.position);
   document.getElementById('model-note').textContent=moving?t('transitionNote'):note();
   document.getElementById('timeline').value=s.position;

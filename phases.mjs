@@ -15,3 +15,10 @@ export function phaseAt(kind, position) {
   if(p<8)return {key:'cytokinesis',division:'II'};
   return {key:'divisionComplete',division:''};
 }
+
+export function phaseSource(kind,position) {
+  const phase=phaseAt(kind,position);
+  if(phase.key==='interphaseName')return '12-7';
+  if(kind==='mitosis')return ['cytokinesis','divisionComplete'].includes(phase.key)?'12-9':'12-8';
+  return phase.division==='I'?'12-14':'12-15';
+}
