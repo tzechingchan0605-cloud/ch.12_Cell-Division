@@ -2,7 +2,7 @@
 
 ## Automated biological and animation rules — passed
 
-`node --test tests/*.test.mjs`: **17 tests passed, 0 failed**.
+`node --test tests/*.test.mjs`: **20 tests passed, 0 failed**.
 
 | Checkpoint | Chromosomes | DNA molecules | Scope |
 |---|---:|---:|---|
@@ -49,7 +49,7 @@ Source and generated offline edition were pushed to GitHub `main`. The GitHub Pa
 
 ## Compact view, phase badges and n/t counters — passed
 
-Additional automated checks cover phase labels I/II, nuclear-envelope re-formation, and per-cell/per-pole counts during replication, metaphase, anaphase, telophase and final daughter formation. The 17-test total includes these checks.
+Additional automated checks cover phase labels I/II, nuclear-envelope re-formation, and per-cell/per-pole counts during replication, metaphase, anaphase, telophase and final daughter formation. The 20-test total includes these checks.
 
 Chromium checks at 1366 × 768 verify that the entire transport panel (playback buttons and scrubber) remains within the viewport in both English and Traditional Chinese throughout both meiotic divisions. Each phase badge is checked against prophase, metaphase, anaphase, telophase and cytokinesis at representative fractional positions. Internal s0/s1 suffixes are absent from displayed chromosome labels; M/P origin and chromosome-pair identity remain. Detailed observation notes are expandable below the transport panel. Offline checks expand those notes explicitly.
 
@@ -63,4 +63,10 @@ Large centred phase headings and phase-specific action descriptions are bilingua
 
 Inspected text for printed pages 12-3–12-4, 12-7–12-9, 12-14–12-15 and 12-17–12-20; visually inspected the original phase diagrams on 12-8, 12-14 and 12-15. Phase copy, terminology and source notices were updated. The textbook itself defines separated sisters as daughter chromosomes; the numeric t convention remains explicitly attributed to the user's separate annotated reference.
 
-Two additional tests verify prophase nuclear-envelope breakdown/spindle formation, interphase/telophase chromatin display, and the correct source-page mappings. The 17-test suite passed with no skipped tests. Chromium verifies exact bilingual descriptions and their page references, all prior playback/recording/CSV/offline interactions, and the complete playback panel within 1366 × 768 in both languages.
+Two additional tests verify prophase nuclear-envelope breakdown/spindle formation, interphase/telophase chromatin display, and the correct source-page mappings. The 20-test suite passed with no skipped tests. Chromium verifies exact bilingual descriptions and their page references, all prior playback/recording/CSV/offline interactions, and the complete playback panel within 1366 × 768 in both languages.
+
+## Larger view, explicit equators and no misleading overlap — passed
+
+Twenty unit tests passed. New checks verify replication/condensation order, textbook-style individual/paired alignment at labelled spindle equators, and separation of every pair of distinct chromosome identities throughout 801 sampled positions per run, for both division types and all four orientation settings with crossing over disabled. Clearance includes the line width and allowance for the wavy chromatin display. Shared centromeres of sisters belonging to the same chromosome are intentionally exempt.
+
+Chromium confirms a larger canvas and a complete replicated-chromosome body at least 29 screen pixels wide at 1366 × 768, with all playback controls visible. It verifies transferred blue and red terminal segments on their opposite-origin recipients when crossing over is enabled, and restoration of original colours when it is disabled. Existing language/state, mobile, CSV and offline checks also pass.

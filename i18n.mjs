@@ -81,7 +81,7 @@ export const dict={
     "norep": "兩次減數核分裂之間不再複製 DNA。",
     "variation": "n = 2、沒有互換時，重複分裂可出現四種母／父源組合；單次分裂只產生其中一部分，不一定有四種。",
     "assumptions": "模型說明與來源",
-    "assumptionText": "本模型為等分的二維示意圖，時間與長度均非人體實測數據；不表示人類卵子形成四個等大的功能性配子。等位基因在兩個相同位置以 M／P 標記，僅作追蹤；不涉及連鎖計算。紡錘絲為方向示意。成核與細胞質分裂以形成子細胞概括。 本模型示意動物細胞的分裂溝；植物細胞則形成細胞板（課本 12-9）。間期及末期的波浪線只作染色質身份追蹤，並非光顯微鏡下可分辨的個別染色體；着絲點標記亦作追蹤用。方向及階段時長均為示意，胞質分裂可在核分裂接近尾聲時開始。",
+    "assumptionText": "本模型為等分的二維示意圖，時間與長度均非人體實測數據；不表示人類卵子形成四個等大的功能性配子。等位基因在兩個相同位置以 M／P 標記，僅作追蹤；不涉及連鎖計算。紡錘絲為方向示意。成核與細胞質分裂以形成子細胞概括。 本模型示意動物細胞的分裂溝；植物細胞則形成細胞板（課本 12-9）。間期及末期的波浪線只作染色質身份追蹤，並非光顯微鏡下可分辨的個別染色體；着絲點標記亦作追蹤用。方向及階段時長均為示意，胞質分裂可在核分裂接近尾聲時開始。 有絲分裂的圖相對課本旋轉了方向，以保留上下兩極；赤道面與染色單體的朝向隨紡錘軸一致調整。DNA 在間期完成複製，凝縮則在前期進行；本動畫把凝縮集中於前期初段以便觀察。",
     "source": "已核對你提供的 te_12_c.pdf：染色體與同源染色體（12-3–12-4）、間期（12-7）、有絲分裂與胞質分裂（12-8–12-9）、減數分裂（12-14–12-15）、獨立分配與互換（12-17–12-18）及比較（12-19）。階段說明依課本改述，圖像為原創示意。t 的定義來自你提供的計數參考圖，並非課本符號。未另行核對 EDB 補充文件。",
     "glossary": "雙語詞彙",
     "stages": [
@@ -190,7 +190,9 @@ export const dict={
       "divisionCompleteMeiosis": "完成兩次核分裂與細胞質分裂：四個單倍體產物；沒有第二次 DNA 複製。"
     },
     "endMeiosisI": "減數分裂 I 完成（各子細胞）",
-    "pagePrefix": "課本 "
+    "pagePrefix": "課本 ",
+    "equator": "赤道面",
+    "exchangeLegend": "互換端段以另一親本的顏色標示"
   },
   "en": {
     "chromatids": "Chromatids",
@@ -273,7 +275,7 @@ export const dict={
     "norep": "There is no DNA replication between the two meiotic nuclear divisions.",
     "variation": "For n = 2 without crossing over, four maternal/paternal combinations are possible across runs. One meiosis produces only a subset; it need not produce all four.",
     "assumptions": "Model information & sources",
-    "assumptionText": "An equal-division 2D schematic: timing and lengths are not measured human data. It does not imply that human oogenesis produces four equal functional gametes. Two matching loci carry M/P origin markers for tracing only, without linkage calculations. Spindle fibres indicate direction. Daughter-cell formation summarises nuclear re-formation and cytoplasmic division. The model shows an animal-cell cleavage furrow; plant cells form a cell plate (12-9). Wavy traces in interphase and telophase preserve chromatin identities, not individually visible chromosomes under a light microscope. Centromere markers are retained for tracing. Orientation and phase duration are schematic; cytoplasmic division can begin towards the end of nuclear division.",
+    "assumptionText": "An equal-division 2D schematic: timing and lengths are not measured human data. It does not imply that human oogenesis produces four equal functional gametes. Two matching loci carry M/P origin markers for tracing only, without linkage calculations. Spindle fibres indicate direction. Daughter-cell formation summarises nuclear re-formation and cytoplasmic division. The model shows an animal-cell cleavage furrow; plant cells form a cell plate (12-9). Wavy traces in interphase and telophase preserve chromatin identities, not individually visible chromosomes under a light microscope. Centromere markers are retained for tracing. Orientation and phase duration are schematic; cytoplasmic division can begin towards the end of nuclear division. The mitosis diagram is rotated relative to the textbook to retain upper/lower poles; its equator and sister orientation follow that spindle axis. DNA replication finishes in interphase, while condensation occurs in prophase; the animation concentrates condensation in early prophase for readability.",
     "source": "Checked against your te_12_c.pdf: chromosomes and homologues (12-3–12-4), interphase (12-7), mitosis and cytoplasmic division (12-8–12-9), meiosis (12-14–12-15), independent assortment and crossing over (12-17–12-18), and comparison (12-19). Phase descriptions are paraphrased from the textbook; drawings are original schematics. The t convention comes from your counting reference, not the textbook. EDB supplementary documents have not been independently checked.",
     "glossary": "Bilingual glossary",
     "stages": [
@@ -382,6 +384,8 @@ export const dict={
       "divisionCompleteMeiosis": "Two nuclear divisions and cytoplasmic division are complete: four haploid products, without a second DNA replication."
     },
     "endMeiosisI": "End of meiosis I (each daughter)",
-    "pagePrefix": "p. "
+    "pagePrefix": "p. ",
+    "equator": "Equator",
+    "exchangeLegend": "Exchanged tips carry the other parent’s colour"
   }
 };

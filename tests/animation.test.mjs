@@ -1,6 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {sceneAt,advancePosition} from '../animation.mjs';
+import {clearance} from './helpers/clearance.mjs';
 import {products} from '../model.mjs';
 
 const close=(a,b,tolerance=1e-5)=>assert.ok(Math.abs(a-b)<tolerance,`${a} ≠ ${b}`);
@@ -76,4 +77,23 @@ test('frame-rate and playback speed only change the viewing position, not final 
   let position=0;for(let i=0;i<600;i++)position=advancePosition(position,16,1200);
   assert.equal(position,8);
   assert.deepEqual(sceneAt('meiosis',position,[true,false],true),sceneAt('meiosis',8,[true,false],true));
+});
+
+test('without crossing over, distinct chromosomes never overlap along the full animation',()=>{
+ for(const kind of ['mitosis','meiosis'])for(const flips of [[false,false],[false,true],[true,false],[true,true]]){
+  for(let i=0;i<=800;i++){
+   const frame=sceneAt(kind,i/100,flips,false),space=clearance(frame);
+   assert.ok(space.min>9+3*frame.chromatin,`${kind}, ${flips}, event ${i/100}: ${space.pair} must remain separate`);
+  }
+ }
+});
+
+test('metaphase uses the spindle equator: individual chromosomes in mitosis/II and homologous pairs in I',()=>{
+ const mitosis=sceneAt('mitosis',2.5),first=sceneAt('meiosis',2.5),second=sceneAt('meiosis',6);
+ assert.ok(mitosis.strands.every(a=>a.y===220));
+ assert.ok(mitosis.strands.every(a=>Math.abs(a.topX)>Math.abs(a.topY)));
+ for(const pair of [1,2]){const homologues=first.strands.filter(a=>a.pair===pair&&a.sister===0);assert.equal(homologues[0].x,homologues[1].x);assert.equal((homologues[0].y+homologues[1].y)/2,220);}
+ assert.ok(second.strands.every(a=>a.x===300));
+ assert.equal(mitosis.equators[0].opacity,1);
+ assert.equal(second.equators.filter(a=>a.opacity===1).length,2);
 });

@@ -2,6 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {phaseAt,phaseSource} from '../phases.mjs';
 import {sceneAt} from '../animation.mjs';
+import {countsAt} from '../model.mjs';
 
 test('phase labels follow replication, alignment, separation, nuclear re-formation and cleavage',()=>{
   for(const kind of ['mitosis','meiosis'])for(const [position,key] of [[0,'interphaseName'],[1,'interphaseName'],[1.5,'prophase'],[2.5,'metaphase'],[3,'metaphase'],[3.5,'anaphase'],[4.15,'telophase'],[4.6,'cytokinesis']]){
@@ -47,4 +48,16 @@ test('phase descriptions cite the inspected printed textbook pages',()=>{
  assert.equal(phaseSource('mitosis',4.6),'12-9');
  for(const p of [1.5,2.5,3.5,4.15,4.6])assert.equal(phaseSource('meiosis',p),'12-14');
  for(const p of [5.1,5.6,6.5,7.15,7.6])assert.equal(phaseSource('meiosis',p),'12-15');
+});
+
+test('replication is complete by the end of interphase; condensation completes in early prophase',()=>{
+ for(const kind of ['mitosis','meiosis']){
+  assert.equal(phaseAt(kind,1).key,'interphaseName');
+  assert.deepEqual(countsAt(kind,1).count,[4,8]);
+  assert.deepEqual(countsAt(kind,1.35).count,[4,8]);
+  assert.equal(sceneAt(kind,1).chromatin,1);
+  assert.equal(phaseAt(kind,1.35).key,'prophase');
+  assert.equal(sceneAt(kind,1.35).chromatin,0);
+  assert.equal(sceneAt(kind,2.5).chromatin,0);
+ }
 });

@@ -12,20 +12,20 @@ const phaseDescription=(kind,position)=>{const phase=phaseAt(kind,position);cons
 const colour=o=>o==='M'?'#b65e45':'#437da1';
 const svgViews = new WeakMap();
 function drawing(kind) {
-  return `<div class="model"><h3>${t(kind)}</h3><div class="scene-window"><svg data-kind="${kind}" viewBox="0 -110 600 550" role="group"></svg><span class="phase-label" data-phase="${kind}"></span></div><div class="count" data-count="${kind}"></div></div>`;
+  return `<div class="model"><h3>${t(kind)}</h3><div class="scene-window"><svg data-kind="${kind}" viewBox="0 -85 600 525" role="group"></svg><span class="phase-label" data-phase="${kind}"></span></div><div class="count" data-count="${kind}"></div></div>`;
 }
 function fitAnnotations(svg) {
-  const box=svg.getBoundingClientRect(),scale=Math.min(box.width/600,box.height/550);
-  if(scale>0){svg.style.setProperty('--annotation-size',Math.max(11,8.5/scale)+'px');svg.style.setProperty('--allele-size',Math.max(10,8/scale)+'px');}
+  const box=svg.getBoundingClientRect(),scale=Math.min(box.width/600,box.height/525);
+  if(scale>0){svg.style.setProperty('--annotation-size',Math.max(11,9.5/scale)+'px');svg.style.setProperty('--allele-size',Math.max(10,9/scale)+'px');}
 }
 function initialiseScene(svg) {
   const scene=sceneAt(svg.dataset.kind,0);
   svg.innerHTML=`<g class="membranes">${scene.membranes.map(a=>`<path data-membrane="${a.key}" class="cell"/>`).join('')}</g>
-    <g class="nuclei" aria-hidden="true">${scene.nuclei.map(a=>`<path data-nucleus="${a.key}" class="nuclear-envelope"/>`).join('')}</g><g class="spindles" aria-hidden="true">${scene.strands.map(a=>`<path data-spindle="${a.key}" fill="none" stroke="#b5cec3" stroke-width="1.3"/>`).join('')}</g>
+    <g class="equators" aria-hidden="true">${scene.equators.map(a=>`<g data-equator="${a.key}"><path class="equator-line"/><text class="equator-label"/></g>`).join('')}</g><g class="nuclei" aria-hidden="true">${scene.nuclei.map(a=>`<path data-nucleus="${a.key}" class="nuclear-envelope"/>`).join('')}</g><g class="spindles" aria-hidden="true">${scene.strands.map(a=>`<path data-spindle="${a.key}" fill="none" stroke="#b5cec3" stroke-width="1.3"/>`).join('')}</g>
     <g class="chromatids">${[...scene.strands].sort((a,b)=>b.sister-a.sister).map(a=>`<g class="chromosome" data-chrom="${a.id}" data-strand="${a.key}" role="button" tabindex="0"><path class="proximal" fill="none" stroke-width="7" stroke-linecap="round"/><circle class="centromere" r="4" fill="#253f45"/><text class="svgtext origin-label" text-anchor="middle"/><text class="svgtext allele-proximal"/></g>`).join('')}</g>
     <g class="segments" aria-hidden="true">${scene.strands.map(a=>`<g data-segment="${a.key}"><path fill="none" stroke-width="7" stroke-linecap="round"/><text class="svgtext allele-distal"/></g>`).join('')}</g>`;
   const view={};
-  for(const [group,attribute] of [['strands','strand'],['segments','segment'],['membranes','membrane'],['spindles','spindle'],['nuclei','nucleus']])
+  for(const [group,attribute] of [['strands','strand'],['segments','segment'],['membranes','membrane'],['spindles','spindle'],['nuclei','nucleus'],['equators','equator']])
     view[group]=new Map([...svg.querySelectorAll(`[data-${attribute}]`)].map(node=>[node.dataset[attribute],node]));
   svgViews.set(svg,view);
   return view;
@@ -41,7 +41,7 @@ function traceBetween(a,b,amount) {
   }).join(' ');
 }
 function strandTrace(a,distal,chromatin) {
-  const centre={x:a.x,y:a.y},top={x:a.x+a.topX,y:a.y+a.topY},cut={x:a.x+a.bottomX*.4,y:a.y+a.bottomY*.4},bottom={x:a.x+a.bottomX,y:a.y+a.bottomY};
+  const centre={x:a.x,y:a.y},top={x:a.x+a.topX,y:a.y+a.topY},cut={x:a.x+a.bottomX*.15,y:a.y+a.bottomY*.15},bottom={x:a.x+a.bottomX,y:a.y+a.bottomY};
   return distal?traceBetween(cut,bottom,chromatin):traceBetween(top,centre,chromatin)+' '+traceBetween(centre,cut,chromatin).replace(/^M/,'L');
 }
 function paintDrawing(svg) {
@@ -51,6 +51,7 @@ function paintDrawing(svg) {
   const name=phaseName(kind,position);
   document.querySelector(`[data-phase="${kind}"]`).textContent=name;
   svg.setAttribute('aria-label',t(kind)+' — '+name);
+  for(const a of frame.equators){const node=view.equators.get(a.key);setAttributes(node,{opacity:a.opacity});setAttributes(node.querySelector('path'),{d:`M ${a.x1} ${a.y1} L ${a.x2} ${a.y2}`});const label=node.querySelector('text');setAttributes(label,{x:a.labelX,y:a.labelY,'text-anchor':a.key==='first'?'end':'start'});label.textContent=t('equator');}
   for(const a of frame.nuclei)setAttributes(view.nuclei.get(a.key),{d:a.path,opacity:a.opacity});
   for(const a of frame.membranes) setAttributes(view.membranes.get(a.key),{d:a.path,opacity:a.opacity});
   for(const a of frame.spindles) setAttributes(view.spindles.get(a.key),{d:`M ${a.x} ${a.y} L ${a.toX} ${a.toY}`,opacity:a.opacity});
@@ -62,15 +63,16 @@ function paintDrawing(svg) {
     setAttributes(node,{opacity:a.opacity,tabindex:a.opacity<.01?-1:0,'aria-hidden':a.opacity<.01,'aria-label':`${t('identity')} ${a.id}; ${t('homologue')} ${a.origin==='M'?'P':'M'}${a.pair}`});
     setAttributes(node.querySelector('.proximal'),{d:strandTrace(a,false,frame.chromatin),stroke:colour(a.origin),'stroke-width':7-3*frame.chromatin,'stroke-dasharray':a.origin==='P'?'6 3':''});
     setAttributes(node.querySelector('.centromere'),{cx:a.x,cy:a.y,opacity:labelOpacity});
-    setAttributes(label,{x:a.x,y:a.y+a.length/2+17,opacity:s.labels?labelOpacity:0});
+    const sideLabel=kind==='meiosis'&&frame.attached>.5&&position>1;
+    setAttributes(label,{x:a.x+(sideLabel?(a.origin==='M'?-1:1)*(a.length/2+20):0),y:sideLabel?a.y+5:a.y+a.length/2+17,'text-anchor':sideLabel?(a.origin==='M'?'end':'start'):'middle',opacity:s.labels?labelOpacity:0});
     label.textContent=a.id;
     const allele=node.querySelector('.allele-proximal');
     setAttributes(allele,{x:a.x+a.topX+6,y:a.y+a.topY*.7,opacity:s.alleles?1:0});allele.textContent=a.origin+'a';
   }
   for(const a of frame.distal) {
     const node=view.segments.get(a.key);
-    setAttributes(node,{opacity:a.opacity});
-    setAttributes(node.querySelector('path'),{d:strandTrace(a,true,frame.chromatin),stroke:colour(a.origin),'stroke-width':7-3*frame.chromatin,'stroke-dasharray':a.origin==='P'?'6 3':''});
+    setAttributes(node,{opacity:a.opacity,'data-recipient':a.recipient});
+    setAttributes(node.querySelector('path'),{d:strandTrace(a,true,frame.chromatin),stroke:colour(a.origin),'stroke-width':(7-3*frame.chromatin)+(a.recipient!==a.key?1:0),'stroke-dasharray':a.origin==='P'?'6 3':''});
     const allele=node.querySelector('text');setAttributes(allele,{x:a.x+a.bottomX+6,y:a.y+a.bottomY*.9,opacity:s.alleles?1:0});allele.textContent=a.origin+'b';
   }
 }
@@ -97,7 +99,7 @@ function note(){if(s.event===1)return t('repnote');if(s.event===4&&s.kind==='mei
 function render(){const retained=new Map([...document.querySelectorAll('svg[data-kind]')].map(svg=>[svg.dataset.kind,svg]));const focused=document.activeElement?.id;document.documentElement.lang=lang==='zh'?'zh-Hant':'en-GB';document.title=t('brand');document.getElementById('brand').textContent=t('brand');['zh','en'].forEach(l=>{document.getElementById(l).classList.toggle('active',l===lang);document.getElementById(l).setAttribute('aria-pressed',l===lang)});
  const q=t('questions')[s.q];
  document.getElementById('app').innerHTML=`<div class="intro"><div><div class="eyebrow">${t('eyebrow')}</div><h1>${t('title')}</h1><p>${t('intro')}</p></div><span class="pill">${t('badge')}</span></div><nav class="toolbar" aria-label="${t('model')}">${btn('explore','explore',s.mode==='explore')}${btn('challenge','challenge',s.mode==='challenge')}<span style="flex:1"></span>${btn('mitosis','mitosis',s.kind==='mitosis')}${btn('meiosis','meiosis',s.kind==='meiosis')}${btn('compare','compare',s.compare)}</nav>
- <div class="layout"><section class="card"><div class="cardhead"><h2>${t('model')}</h2><button id="labels" aria-pressed="${s.labels}">${t('labels')}: ${t(s.labels?'on':'off')}</button></div><div class="stage"><small>${String(s.event+1).padStart(2,'0')} / 09</small> <b>${stage(s.kind,s.event)}</b></div>${s.compare?`<div class="muted" style="padding:0 20px">${t('sync')}</div>`:''}<div class="modelgrid ${s.compare?'compare':''}">${s.compare?drawing('mitosis')+drawing('meiosis'):drawing(s.kind)}</div><div class="legend"><span><i class="dot"></i>${t('maternal')}</span><span><i class="dot p"></i>${t('paternal')}</span><span>● ${terms[5][lang==='zh'?0:1]}</span></div><div class="transport"><div class="row">${btn('play',s.playing?'pause':'play',s.playing)}${btn('step','step')}${btn('replay','replay')}${btn('reset','reset')}<label for="speed" class="muted">${t('speed')}</label><select id="speed"><option value="4200" ${s.speed===4200?'selected':''}>${t('slow')}</option><option value="2400" ${s.speed===2400?'selected':''}>${t('normal')}</option><option value="1200" ${s.speed===1200?'selected':''}>${t('fast')}</option></select></div><input id="timeline" type="range" min="0" max="8" step="0.001" value="${s.position}" aria-label="${t('timeline')}"/><div class="events"><span>${t('stages')[0]}</span><span>${t('stages')[4]}</span><span>${t('stages')[8]}</span></div></div><details class="observation-note"><summary>${t('observationHint')}</summary><div class="notice" id="model-note">${note()}</div></details></section>
+ <div class="layout"><section class="card"><div class="cardhead"><h2>${t('model')}</h2><button id="labels" aria-pressed="${s.labels}">${t('labels')}: ${t(s.labels?'on':'off')}</button></div><div class="stage"><small>${String(s.event+1).padStart(2,'0')} / 09</small> <b>${stage(s.kind,s.event)}</b></div>${s.compare?`<div class="sync-caption">${t('sync')}</div>`:''}<div class="modelgrid ${s.compare?'compare':''}">${s.compare?drawing('mitosis')+drawing('meiosis'):drawing(s.kind)}</div><div class="legend"><span><i class="dot"></i>${t('maternal')}</span><span><i class="dot p"></i>${t('paternal')}</span><span>● ${terms[5][lang==='zh'?0:1]}</span>${s.cross?`<span class="exchange-legend">${t('exchangeLegend')}</span>`:''}</div><div class="transport"><div class="row">${btn('play',s.playing?'pause':'play',s.playing)}${btn('step','step')}${btn('replay','replay')}${btn('reset','reset')}<label for="speed" class="muted">${t('speed')}</label><select id="speed"><option value="4200" ${s.speed===4200?'selected':''}>${t('slow')}</option><option value="2400" ${s.speed===2400?'selected':''}>${t('normal')}</option><option value="1200" ${s.speed===1200?'selected':''}>${t('fast')}</option></select></div><input id="timeline" type="range" min="0" max="8" step="0.001" value="${s.position}" aria-label="${t('timeline')}"/><div class="events"><span>${t('stages')[0]}</span><span>${t('stages')[4]}</span><span>${t('stages')[8]}</span></div></div><details class="observation-note"><summary>${t('observationHint')}</summary><div class="notice" id="model-note">${note()}</div></details></section>
  <aside class="sidebar"><section class="card panel"><h2>${t('settings')}</h2>${[0,1].map(i=>`<div class="control"><label>${t('pair')} ${i+1} <b>${s.flips[i]?'P | M':'M | P'}</b></label><button id="flip${i}" ${s.event>=4?'disabled':''}>↔ ${t('flip')}</button></div>`).join('')}<div class="control"><label><input id="cross" type="checkbox" ${s.cross?'checked':''} ${s.event>=4?'disabled':''}>${t('cross')}</label></div><div class="control"><label><input id="reduced" type="checkbox" ${s.reduced?'checked':''}>${t('reducedMotion')}</label></div><div class="control"><label><input id="alleles" type="checkbox" ${s.alleles?'checked':''}>${t('alleles')}</label></div>${btn('random','random')}<p>${t('locked')}</p><details><summary>${t('cross')}</summary><p>${t('crosshelp')}</p></details></section><section class="card panel"><h2>${t('selected')}</h2><p>${s.selected?`${t('identity')}: <b>${s.selected}</b><br>${t('homologue')}: <b>${s.selected[0]==='M'?'P':'M'}${s.selected[1]}</b><br>${t('sisterHelp')}`:t('select')}</p></section></aside></div>
  <div class="below"><section class="card panel"><h2>${t('observations')}</h2><div class="row">${btn('record','record')}${btn('download','download')}${btn('clear','clear')}</div>${s.records.length?`<div class="scroll"><table data-records><thead><tr><th>${t('trial')}</th><th>${t('stage')}</th><th>${t('chromosomeChromatidCounts')}</th><th>${t('result')}</th></tr></thead><tbody>${s.records.map((r,i)=>`<tr><td>${i+1}<br>${t(r.kind)}<br>${t('crossCSV')}: ${t(r.cross?'on':'off')}<br>${r.flips.map(x=>x?'P|M':'M|P').join(' / ')}</td><td>${phaseName(r.kind,r.position)}<br>${t('time')}: ${r.position.toFixed(3)}</td><td>${r.counting.notation} / t = ${r.counting.chromatids}<br>${t('cell')} · ${t('dna')}: ${r.counting.count[1]}${r.counting.perPole?`<br>${t('pole')}: ${r.counting.perPole.notation}, t = ${r.counting.perPole.chromatids} · ${t('dna')}: ${r.counting.perPole.count[1]}`:''}</td><td>${r.event===8?r.snap.cells.map(c=>c.map(a=>`${a.id} [${a.loci.join('·')}]`).join(' + ')).join('<br>'):'—'}</td></tr>`).join('')}</tbody></table></div>`:`<p class="muted">${t('empty')}</p>`}</section>
  <section class="card panel" ${s.mode!=='challenge'?'hidden':''}><div class="eyebrow">${s.q+1} / 5</div><h2>${t('guide')}</h2><h3>${q[0]}</h3><p>${t('predict')}</p><div class="qoptions">${q[1].map((a,i)=>`<button data-choice="${i}" class="${s.choice===i?'active':''}">${a}</button>`).join('')}</div><div class="row">${btn('check','check')}${btn('hint','hint')}${btn('reveal','reveal')}</div>${s.hint?`<p class="notice">${q[3]}${s.hint>1?' '+t('predict'):''}</p>`:''}${s.attempt||s.reveal?`<div class="feedback">${s.attempt?t('attempt')+'<br>':''}${q[2]}</div>`:''}<label for="response"><p>${t('explain')}</p></label><textarea id="response">${esc(s.response)}</textarea>${btn('qnext','qnext')}</section></div>

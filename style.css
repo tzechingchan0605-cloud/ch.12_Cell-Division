@@ -28,3 +28,11 @@ h1{font-size:clamp(25px,2.4vw,32px);margin:4px 0 8px}.intro{margin-bottom:12px}.
 .count-scope{flex-basis:100%;text-align:center}
 @media(max-width:950px){.model svg{height:220px}.phase-label{font-size:24px}}
 @media(min-width:951px) and (max-height:850px){header{padding-top:6px;padding-bottom:6px}main{padding-top:10px}.intro .eyebrow{display:none}.intro h1{font-size:28px;margin:0;line-height:1.25}.intro{margin-bottom:8px}.toolbar{margin-bottom:8px}}
+/* Larger model without pushing playback below a laptop viewport. */
+.model svg{height:clamp(220px,calc(100dvh - 538px),350px)}
+.cardhead{padding:6px 14px}.cardhead h2{font-size:17px}.cardhead button{font-size:12px;padding:5px 10px}
+.stage{min-height:40px;padding:5px 14px}.sync-caption{padding:0 14px;font-size:10px;line-height:1.4;color:#70827d}
+.count{line-height:1.4}.legend{padding-top:4px;padding-bottom:4px}
+@media(min-width:951px) and (max-height:850px){.intro{margin-bottom:6px}.toolbar{margin-bottom:6px}}
+@media(max-width:950px){.model svg{height:270px}}
+.equator-line{stroke:#839e95;stroke-width:1.5;stroke-dasharray:5 5;fill:none}.equator-label{font-size:var(--allele-size,12px);fill:#527068}.exchange-legend{color:#41665d;font-size:11px}

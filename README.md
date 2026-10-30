@@ -35,7 +35,7 @@ Crossing over exchanges the distal b-locus segment of M1-s1 and P1-s0 reciprocal
 node --test tests/*.test.mjs
 ```
 
-Seventeen tests cover stable checkpoints, all four orientation settings, I/II separation without intervening replication, reciprocal exchange conservation, combinations across runs, mitotic identity, language-key parity, continuous geometry at stage boundaries, spindle direction, arm lengths, final visual lineage and frame-rate independence. The optional `tests/browser.mjs` checks actual intermediate animation frames and interactions using Playwright; install that tool outside the checkout, supply its `PLAYWRIGHT_MODULE` path and optionally `CHROMIUM_PATH`, then run `node tests/browser.mjs` with the HTTP server running. See [ACCEPTANCE.md](ACCEPTANCE.md) for executed browser checks and limitations.
+Twenty tests cover stable checkpoints, all four orientation settings, I/II separation without intervening replication, reciprocal exchange conservation, combinations across runs, mitotic identity, language-key parity, continuous geometry at stage boundaries, spindle direction, arm lengths, final visual lineage and frame-rate independence. The optional `tests/browser.mjs` checks actual intermediate animation frames and interactions using Playwright; install that tool outside the checkout, supply its `PLAYWRIGHT_MODULE` path and optionally `CHROMIUM_PATH`, then run `node tests/browser.mjs` with the HTTP server running. See [ACCEPTANCE.md](ACCEPTANCE.md) for executed browser checks and limitations.
 
 ## 完全離線 / Fully offline
 
@@ -48,3 +48,15 @@ Download `offline.html` and open it directly in a browser, with no server or Int
 The in-app expandable reference table adapts the supplied human 2n = 46 table to the model's 2n = 4 and separates chromosomes, joined sister chromatids (t), and DNA molecules. A test checks all 15 reference rows, including whole-cell anaphase/telophase totals and post-cytoplasmic-division per-daughter counts. CSV exports use the same explicitly named columns.
 
 Each animation shows a large centred phase heading and a textbook-based action description with a printed-page citation. Prophase includes nuclear-envelope breakdown and spindle formation; telophase includes spindle breakdown, new nuclear envelopes and chromosome uncoiling where described in the textbook. Wavy interphase/telophase traces are identity aids for chromatin, not a claim that individual interphase chromosomes are visible. The animal-cell cleavage-furrow model is explicitly distinguished from the plant cell plate (12-9).
+
+## Readability, alignment and crossing-over display
+
+The default model is larger (230 px high at 1366 × 768, up to 350 px on taller screens; 270 px on narrow layouts), with reduced unused heading space and larger identity labels. The playback controls still fit a 1366 × 768 viewport in both languages.
+
+The first metaphase equator is horizontal, with replicated chromosome shapes rotated so the sisters face upper/lower spindle poles. Mitosis aligns chromosomes individually; meiosis I aligns homologues in pairs on opposite sides of the equator. In meiosis II, each cell uses a vertical equator and left/right spindle poles. Dashed equators are labelled. This retains the user's upper/lower first-division axis while following the textbook's arrangement rules.
+
+Without crossing over, all four orientation settings are sampled through the complete timeline at 0.01-event intervals. Distinct chromosome arms retain clearance beyond their rendered stroke widths. Flipped homologues take separate curved approach paths; they never pass through each other. Joined sisters still share their centromere. Meiosis labels sit beside chromosomes to avoid appearing on a neighbouring homologue.
+
+Crossing over moves the corresponding distal segments reciprocally between non-sisters of pair 1. The transferred tips visibly retain the other parent's colour and pattern. UI checks verify the blue tip on M1 and red tip on P1 only when crossing over is enabled. The longer coloured terminal segment still preserves locus order and segment totals.
+
+DNA replication is complete at the end of interphase. Condensation remains in prophase, as specified on textbook 12-8; the schematic completes it early in prophase to make the subsequent alignment easier to see. This does not change DNA or chromosome counts.

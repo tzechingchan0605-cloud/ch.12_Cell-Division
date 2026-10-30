@@ -76,6 +76,19 @@ try {
   await seek(2.5);assert.ok((await page.locator('[data-count="meiosis"]').innerText()).includes('t = 8'));
   await seek(8);assert.ok((await page.locator('[data-count="meiosis"]').innerText()).includes('t = 0'));
   assert.ok((await page.locator('[data-count="meiosis"]').innerText()).includes('2'));
+  // Larger than the previous compact view, while retaining the playback bar.
+  assert.ok((await page.locator('svg[data-kind="meiosis"]').boundingBox()).height>=225);
+  await seek(2.5);
+  const arms=await page.locator('[data-kind="meiosis"] [data-chrom="M1"] .proximal, [data-kind="meiosis"] [data-segment][data-recipient^="M1-"] path').evaluateAll(nodes=>nodes.map(node=>{const r=node.getBoundingClientRect();return {left:r.left,right:r.right}}));
+  assert.ok(Math.max(...arms.map(a=>a.right))-Math.min(...arms.map(a=>a.left))>=29,'full replicated chromosome must be visibly larger');
+  await seek(0);await page.locator('#cross').check();await seek(2.5);
+  const tip=recipient=>page.locator(`[data-kind="meiosis"] [data-segment][data-recipient="${recipient}"] path`);
+  assert.equal(await tip('M1-s1').getAttribute('stroke'),'#437da1');
+  assert.equal(await tip('P1-s0').getAttribute('stroke'),'#b65e45');
+  await page.screenshot({path:'/tmp/cell-alignment-crossing.png',fullPage:true});
+  await seek(0);await page.locator('#cross').uncheck();await seek(2.5);
+  assert.equal(await tip('M1-s1').getAttribute('stroke'),'#b65e45');
+  await page.screenshot({path:'/tmp/cell-alignment-no-crossing.png',fullPage:true});
   const reduced=await browser.newPage({reducedMotion:'reduce'});
   await reduced.goto(process.env.BASE_URL||'http://127.0.0.1:8000');
   assert.equal(await reduced.locator('#reduced').isChecked(),true);

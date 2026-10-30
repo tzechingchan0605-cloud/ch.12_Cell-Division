@@ -29,4 +29,6 @@ The textbook explicitly calls separated sisters daughter chromosomes (12-8 and 1
 - The model illustrates an animal cleavage furrow; plant cell-plate animation is outside the supplied simulation scope.
 - EDB supplementary documents were not independently checked. No broader curriculum or textbook-page certification is claimed beyond this review.
 
-Validation: 17 automated tests and the Chromium functional checks in `ACCEPTANCE.md` passed after these changes.
+Validation: 20 automated tests and the Chromium functional checks in `ACCEPTANCE.md` passed after these changes.
+
+The readability update completes condensation in early prophase (not interphase); replication has already completed in interphase. Metaphase shapes are oriented to the spindle poles and equators are explicitly labelled. Non-crossing-over runs use separated chromosome approach paths, verified across the full sampled timeline, to avoid suggesting crossing over through incidental overlap. Exchanged terminal pieces retain donor colour/pattern on their recipients.

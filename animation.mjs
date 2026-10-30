@@ -11,7 +11,7 @@ function keyframe(kind, event, flips) {
     const pair = Number(id[1]);
     const pole = (id[0] === 'M') !== flips[pair - 1] ? 0 : 1;
     const length=pair===1?72:48;
-    let x = [155, 410, 210, 395][index], y = [140, 150, 290, 285][index];
+    let x = [155,180,420,395][index], y = [135,300,135,300][index];
     const bend = event === 0 ? 0 : (sister === 0 ? -13 : 13);
     let topX=bend,topY=-length/2,bottomX=bend,bottomY=length/2;
     const opacity = event === 0 && sister === 1 ? 0 : 1;
@@ -29,7 +29,7 @@ function keyframe(kind, event, flips) {
       }
     }
     if (event >= 6 && kind === 'meiosis') {
-      x=300;y=(pole===0?115:325)+(pair===1?-38:38);
+      x=300;y=(pole===0?115:325)+(pair===1?-44:44);
     }
     if (event >= 7 && kind === 'meiosis') {
       x=sister===0?155:445;
@@ -39,6 +39,11 @@ function keyframe(kind, event, flips) {
     if(event>=8&&kind==='meiosis') {
       x+=(pair===1?-39:39);y=pole===0?115:325;
       topX=bottomX=0;topY=-length/2;bottomY=length/2;
+    }
+    // Rotate the metaphase X so the sister chromatids face the two poles.
+    // Our first spindle is vertical (the textbook diagram may be rotated).
+    if(event>=2&&event<=3 || kind==='meiosis'&&event>=4&&event<=5) {
+      [topX,topY]=[-topY,topX];[bottomX,bottomY]=[-bottomY,bottomX];
     }
     return {key: `${id}-s${sister}`, id, sister, pair, origin: id[0], x, y,
       length, topX,topY,bottomX,bottomY,opacity};
@@ -90,6 +95,13 @@ function nucleiAt(kind,p) {
   ])];
 }
 
+function equatorsAt(kind,p) {
+  return [
+    {key:'first',x1:45,y1:220,x2:555,y2:220,labelX:545,labelY:180,opacity:ease((p-1.7)/.3)*(1-ease((p-3)/.35))},
+    ...[115,325].map((cy,i)=>({key:`second-${i}`,x1:300,y1:cy-85,x2:300,y2:cy+85,labelX:330,labelY:cy-70,opacity:kind==='meiosis'?ease((p-5.45)/.55)*(1-ease((p-6)/.35)):0}))
+  ];
+}
+
 export function sceneAt(kind, position, flips = [false,false], crossing = false) {
   const p = Math.max(0, Math.min(8, position));
   const event = Math.min(7, Math.floor(p)), progress = p - event;
@@ -97,7 +109,17 @@ export function sceneAt(kind, position, flips = [false,false], crossing = false)
   const exchange = kind === 'meiosis' && crossing && event === 1;
   const fraction = ease(exchange ? progress / .65 : progress);
   const before = keyframe(kind, event, flips), after = keyframe(kind, event + 1, flips);
-  const strands = before.map((a,i) => interpolateStrand(a,after[i],fraction));
+  const strands = before.map((a,i) => {
+    const strand=interpolateStrand(a,after[i],fraction);
+    // When a homologous pair flips, route its members around each other rather
+    // than through each other. Pairing alone must never look like crossing over.
+    if(kind==='meiosis'&&event===1&&flips.some(Boolean)){
+      const arc=Math.max(0,Math.sin(Math.PI*fraction));
+      strand.x+=(a.pair===1?-1:1)*35*arc;
+      if(flips[a.pair-1])strand.x+=(a.origin==='M'?-1:1)*85*Math.sqrt(arc);
+    }
+    return strand;
+  });
   const exchanged = kind === 'meiosis' && crossing ? ease((p-1.65)/.35) : 0;
   const distal = strands.map(a => {
     const partner = a.key==='M1-s1' ? 'P1-s0' : a.key==='P1-s0' ? 'M1-s1' : a.key;
@@ -115,6 +137,6 @@ export function sceneAt(kind, position, flips = [false,false], crossing = false)
     if(p>=5 && kind==='meiosis'){ x=a.sister===0?25:575; y=pole===0?115:325; opacity=spindleII; }
     return {key:a.key,x,y,toX:a.x,toY:a.y,opacity:opacity*a.opacity};
   });
-  const chromatin=Math.max(1-ease(p-1),kind==='mitosis'?ease((p-4)/.6):ease((p-7)/.6));
-  return {position:p,chromatin,strands,distal,membranes:membranesAt(kind,p),nuclei:nucleiAt(kind,p),spindles,attached};
+  const chromatin=Math.max(1-ease((p-1)/.3),kind==='mitosis'?ease((p-4)/.6):ease((p-7)/.6));
+  return {position:p,chromatin,equators:equatorsAt(kind,p),strands,distal,membranes:membranesAt(kind,p),nuclei:nucleiAt(kind,p),spindles,attached};
 }

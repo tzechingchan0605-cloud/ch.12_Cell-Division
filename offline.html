@@ -28,6 +28,14 @@ h1{font-size:clamp(25px,2.4vw,32px);margin:4px 0 8px}.intro{margin-bottom:12px}.
 .count-scope{flex-basis:100%;text-align:center}
 @media(max-width:950px){.model svg{height:220px}.phase-label{font-size:24px}}
 @media(min-width:951px) and (max-height:850px){header{padding-top:6px;padding-bottom:6px}main{padding-top:10px}.intro .eyebrow{display:none}.intro h1{font-size:28px;margin:0;line-height:1.25}.intro{margin-bottom:8px}.toolbar{margin-bottom:8px}}
+/* Larger model without pushing playback below a laptop viewport. */
+.model svg{height:clamp(220px,calc(100dvh - 538px),350px)}
+.cardhead{padding:6px 14px}.cardhead h2{font-size:17px}.cardhead button{font-size:12px;padding:5px 10px}
+.stage{min-height:40px;padding:5px 14px}.sync-caption{padding:0 14px;font-size:10px;line-height:1.4;color:#70827d}
+.count{line-height:1.4}.legend{padding-top:4px;padding-bottom:4px}
+@media(min-width:951px) and (max-height:850px){.intro{margin-bottom:6px}.toolbar{margin-bottom:6px}}
+@media(max-width:950px){.model svg{height:270px}}
+.equator-line{stroke:#839e95;stroke-width:1.5;stroke-dasharray:5 5;fill:none}.equator-label{font-size:var(--allele-size,12px);fill:#527068}.exchange-legend{color:#41665d;font-size:11px}
 </style></head><body><header><a class="brand" href="#">◉ <span id="brand"></span></a><div class="language" aria-label="Language"><button id="zh" lang="zh-Hant">繁體中文</button><span>|</span><button id="en" lang="en">English</button></div></header><main id="app"></main><script type="module">
 const ids=['M1','P1','M2','P2'];
 function chrom(id,sister=0,cross=false){const pair=+id[1],origin=id[0];return {id,pair,origin,sister,loci:[origin, cross&&pair===1&&((origin==='M'&&sister===1)||(origin==='P'&&sister===0))?(origin==='M'?'P':'M'):origin]};}
@@ -143,7 +151,7 @@ const dict={
     "norep": "兩次減數核分裂之間不再複製 DNA。",
     "variation": "n = 2、沒有互換時，重複分裂可出現四種母／父源組合；單次分裂只產生其中一部分，不一定有四種。",
     "assumptions": "模型說明與來源",
-    "assumptionText": "本模型為等分的二維示意圖，時間與長度均非人體實測數據；不表示人類卵子形成四個等大的功能性配子。等位基因在兩個相同位置以 M／P 標記，僅作追蹤；不涉及連鎖計算。紡錘絲為方向示意。成核與細胞質分裂以形成子細胞概括。 本模型示意動物細胞的分裂溝；植物細胞則形成細胞板（課本 12-9）。間期及末期的波浪線只作染色質身份追蹤，並非光顯微鏡下可分辨的個別染色體；着絲點標記亦作追蹤用。方向及階段時長均為示意，胞質分裂可在核分裂接近尾聲時開始。",
+    "assumptionText": "本模型為等分的二維示意圖，時間與長度均非人體實測數據；不表示人類卵子形成四個等大的功能性配子。等位基因在兩個相同位置以 M／P 標記，僅作追蹤；不涉及連鎖計算。紡錘絲為方向示意。成核與細胞質分裂以形成子細胞概括。 本模型示意動物細胞的分裂溝；植物細胞則形成細胞板（課本 12-9）。間期及末期的波浪線只作染色質身份追蹤，並非光顯微鏡下可分辨的個別染色體；着絲點標記亦作追蹤用。方向及階段時長均為示意，胞質分裂可在核分裂接近尾聲時開始。 有絲分裂的圖相對課本旋轉了方向，以保留上下兩極；赤道面與染色單體的朝向隨紡錘軸一致調整。DNA 在間期完成複製，凝縮則在前期進行；本動畫把凝縮集中於前期初段以便觀察。",
     "source": "已核對你提供的 te_12_c.pdf：染色體與同源染色體（12-3–12-4）、間期（12-7）、有絲分裂與胞質分裂（12-8–12-9）、減數分裂（12-14–12-15）、獨立分配與互換（12-17–12-18）及比較（12-19）。階段說明依課本改述，圖像為原創示意。t 的定義來自你提供的計數參考圖，並非課本符號。未另行核對 EDB 補充文件。",
     "glossary": "雙語詞彙",
     "stages": [
@@ -252,7 +260,9 @@ const dict={
       "divisionCompleteMeiosis": "完成兩次核分裂與細胞質分裂：四個單倍體產物；沒有第二次 DNA 複製。"
     },
     "endMeiosisI": "減數分裂 I 完成（各子細胞）",
-    "pagePrefix": "課本 "
+    "pagePrefix": "課本 ",
+    "equator": "赤道面",
+    "exchangeLegend": "互換端段以另一親本的顏色標示"
   },
   "en": {
     "chromatids": "Chromatids",
@@ -335,7 +345,7 @@ const dict={
     "norep": "There is no DNA replication between the two meiotic nuclear divisions.",
     "variation": "For n = 2 without crossing over, four maternal/paternal combinations are possible across runs. One meiosis produces only a subset; it need not produce all four.",
     "assumptions": "Model information & sources",
-    "assumptionText": "An equal-division 2D schematic: timing and lengths are not measured human data. It does not imply that human oogenesis produces four equal functional gametes. Two matching loci carry M/P origin markers for tracing only, without linkage calculations. Spindle fibres indicate direction. Daughter-cell formation summarises nuclear re-formation and cytoplasmic division. The model shows an animal-cell cleavage furrow; plant cells form a cell plate (12-9). Wavy traces in interphase and telophase preserve chromatin identities, not individually visible chromosomes under a light microscope. Centromere markers are retained for tracing. Orientation and phase duration are schematic; cytoplasmic division can begin towards the end of nuclear division.",
+    "assumptionText": "An equal-division 2D schematic: timing and lengths are not measured human data. It does not imply that human oogenesis produces four equal functional gametes. Two matching loci carry M/P origin markers for tracing only, without linkage calculations. Spindle fibres indicate direction. Daughter-cell formation summarises nuclear re-formation and cytoplasmic division. The model shows an animal-cell cleavage furrow; plant cells form a cell plate (12-9). Wavy traces in interphase and telophase preserve chromatin identities, not individually visible chromosomes under a light microscope. Centromere markers are retained for tracing. Orientation and phase duration are schematic; cytoplasmic division can begin towards the end of nuclear division. The mitosis diagram is rotated relative to the textbook to retain upper/lower poles; its equator and sister orientation follow that spindle axis. DNA replication finishes in interphase, while condensation occurs in prophase; the animation concentrates condensation in early prophase for readability.",
     "source": "Checked against your te_12_c.pdf: chromosomes and homologues (12-3–12-4), interphase (12-7), mitosis and cytoplasmic division (12-8–12-9), meiosis (12-14–12-15), independent assortment and crossing over (12-17–12-18), and comparison (12-19). Phase descriptions are paraphrased from the textbook; drawings are original schematics. The t convention comes from your counting reference, not the textbook. EDB supplementary documents have not been independently checked.",
     "glossary": "Bilingual glossary",
     "stages": [
@@ -444,7 +454,9 @@ const dict={
       "divisionCompleteMeiosis": "Two nuclear divisions and cytoplasmic division are complete: four haploid products, without a second DNA replication."
     },
     "endMeiosisI": "End of meiosis I (each daughter)",
-    "pagePrefix": "p. "
+    "pagePrefix": "p. ",
+    "equator": "Equator",
+    "exchangeLegend": "Exchanged tips carry the other parent’s colour"
   }
 };
 
@@ -460,7 +472,7 @@ function keyframe(kind, event, flips) {
     const pair = Number(id[1]);
     const pole = (id[0] === 'M') !== flips[pair - 1] ? 0 : 1;
     const length=pair===1?72:48;
-    let x = [155, 410, 210, 395][index], y = [140, 150, 290, 285][index];
+    let x = [155,180,420,395][index], y = [135,300,135,300][index];
     const bend = event === 0 ? 0 : (sister === 0 ? -13 : 13);
     let topX=bend,topY=-length/2,bottomX=bend,bottomY=length/2;
     const opacity = event === 0 && sister === 1 ? 0 : 1;
@@ -478,7 +490,7 @@ function keyframe(kind, event, flips) {
       }
     }
     if (event >= 6 && kind === 'meiosis') {
-      x=300;y=(pole===0?115:325)+(pair===1?-38:38);
+      x=300;y=(pole===0?115:325)+(pair===1?-44:44);
     }
     if (event >= 7 && kind === 'meiosis') {
       x=sister===0?155:445;
@@ -488,6 +500,11 @@ function keyframe(kind, event, flips) {
     if(event>=8&&kind==='meiosis') {
       x+=(pair===1?-39:39);y=pole===0?115:325;
       topX=bottomX=0;topY=-length/2;bottomY=length/2;
+    }
+    // Rotate the metaphase X so the sister chromatids face the two poles.
+    // Our first spindle is vertical (the textbook diagram may be rotated).
+    if(event>=2&&event<=3 || kind==='meiosis'&&event>=4&&event<=5) {
+      [topX,topY]=[-topY,topX];[bottomX,bottomY]=[-bottomY,bottomX];
     }
     return {key: `${id}-s${sister}`, id, sister, pair, origin: id[0], x, y,
       length, topX,topY,bottomX,bottomY,opacity};
@@ -539,6 +556,13 @@ function nucleiAt(kind,p) {
   ])];
 }
 
+function equatorsAt(kind,p) {
+  return [
+    {key:'first',x1:45,y1:220,x2:555,y2:220,labelX:545,labelY:180,opacity:ease((p-1.7)/.3)*(1-ease((p-3)/.35))},
+    ...[115,325].map((cy,i)=>({key:`second-${i}`,x1:300,y1:cy-85,x2:300,y2:cy+85,labelX:330,labelY:cy-70,opacity:kind==='meiosis'?ease((p-5.45)/.55)*(1-ease((p-6)/.35)):0}))
+  ];
+}
+
 function sceneAt(kind, position, flips = [false,false], crossing = false) {
   const p = Math.max(0, Math.min(8, position));
   const event = Math.min(7, Math.floor(p)), progress = p - event;
@@ -546,7 +570,17 @@ function sceneAt(kind, position, flips = [false,false], crossing = false) {
   const exchange = kind === 'meiosis' && crossing && event === 1;
   const fraction = ease(exchange ? progress / .65 : progress);
   const before = keyframe(kind, event, flips), after = keyframe(kind, event + 1, flips);
-  const strands = before.map((a,i) => interpolateStrand(a,after[i],fraction));
+  const strands = before.map((a,i) => {
+    const strand=interpolateStrand(a,after[i],fraction);
+    // When a homologous pair flips, route its members around each other rather
+    // than through each other. Pairing alone must never look like crossing over.
+    if(kind==='meiosis'&&event===1&&flips.some(Boolean)){
+      const arc=Math.max(0,Math.sin(Math.PI*fraction));
+      strand.x+=(a.pair===1?-1:1)*35*arc;
+      if(flips[a.pair-1])strand.x+=(a.origin==='M'?-1:1)*85*Math.sqrt(arc);
+    }
+    return strand;
+  });
   const exchanged = kind === 'meiosis' && crossing ? ease((p-1.65)/.35) : 0;
   const distal = strands.map(a => {
     const partner = a.key==='M1-s1' ? 'P1-s0' : a.key==='P1-s0' ? 'M1-s1' : a.key;
@@ -564,8 +598,8 @@ function sceneAt(kind, position, flips = [false,false], crossing = false) {
     if(p>=5 && kind==='meiosis'){ x=a.sister===0?25:575; y=pole===0?115:325; opacity=spindleII; }
     return {key:a.key,x,y,toX:a.x,toY:a.y,opacity:opacity*a.opacity};
   });
-  const chromatin=Math.max(1-ease(p-1),kind==='mitosis'?ease((p-4)/.6):ease((p-7)/.6));
-  return {position:p,chromatin,strands,distal,membranes:membranesAt(kind,p),nuclei:nucleiAt(kind,p),spindles,attached};
+  const chromatin=Math.max(1-ease((p-1)/.3),kind==='mitosis'?ease((p-4)/.6):ease((p-7)/.6));
+  return {position:p,chromatin,equators:equatorsAt(kind,p),strands,distal,membranes:membranesAt(kind,p),nuclei:nucleiAt(kind,p),spindles,attached};
 }
 
 // Phase names are navigation aids for the continuous schematic, not timing data.
@@ -607,20 +641,20 @@ const phaseDescription=(kind,position)=>{const phase=phaseAt(kind,position);cons
 const colour=o=>o==='M'?'#b65e45':'#437da1';
 const svgViews = new WeakMap();
 function drawing(kind) {
-  return `<div class="model"><h3>${t(kind)}</h3><div class="scene-window"><svg data-kind="${kind}" viewBox="0 -110 600 550" role="group"></svg><span class="phase-label" data-phase="${kind}"></span></div><div class="count" data-count="${kind}"></div></div>`;
+  return `<div class="model"><h3>${t(kind)}</h3><div class="scene-window"><svg data-kind="${kind}" viewBox="0 -85 600 525" role="group"></svg><span class="phase-label" data-phase="${kind}"></span></div><div class="count" data-count="${kind}"></div></div>`;
 }
 function fitAnnotations(svg) {
-  const box=svg.getBoundingClientRect(),scale=Math.min(box.width/600,box.height/550);
-  if(scale>0){svg.style.setProperty('--annotation-size',Math.max(11,8.5/scale)+'px');svg.style.setProperty('--allele-size',Math.max(10,8/scale)+'px');}
+  const box=svg.getBoundingClientRect(),scale=Math.min(box.width/600,box.height/525);
+  if(scale>0){svg.style.setProperty('--annotation-size',Math.max(11,9.5/scale)+'px');svg.style.setProperty('--allele-size',Math.max(10,9/scale)+'px');}
 }
 function initialiseScene(svg) {
   const scene=sceneAt(svg.dataset.kind,0);
   svg.innerHTML=`<g class="membranes">${scene.membranes.map(a=>`<path data-membrane="${a.key}" class="cell"/>`).join('')}</g>
-    <g class="nuclei" aria-hidden="true">${scene.nuclei.map(a=>`<path data-nucleus="${a.key}" class="nuclear-envelope"/>`).join('')}</g><g class="spindles" aria-hidden="true">${scene.strands.map(a=>`<path data-spindle="${a.key}" fill="none" stroke="#b5cec3" stroke-width="1.3"/>`).join('')}</g>
+    <g class="equators" aria-hidden="true">${scene.equators.map(a=>`<g data-equator="${a.key}"><path class="equator-line"/><text class="equator-label"/></g>`).join('')}</g><g class="nuclei" aria-hidden="true">${scene.nuclei.map(a=>`<path data-nucleus="${a.key}" class="nuclear-envelope"/>`).join('')}</g><g class="spindles" aria-hidden="true">${scene.strands.map(a=>`<path data-spindle="${a.key}" fill="none" stroke="#b5cec3" stroke-width="1.3"/>`).join('')}</g>
     <g class="chromatids">${[...scene.strands].sort((a,b)=>b.sister-a.sister).map(a=>`<g class="chromosome" data-chrom="${a.id}" data-strand="${a.key}" role="button" tabindex="0"><path class="proximal" fill="none" stroke-width="7" stroke-linecap="round"/><circle class="centromere" r="4" fill="#253f45"/><text class="svgtext origin-label" text-anchor="middle"/><text class="svgtext allele-proximal"/></g>`).join('')}</g>
     <g class="segments" aria-hidden="true">${scene.strands.map(a=>`<g data-segment="${a.key}"><path fill="none" stroke-width="7" stroke-linecap="round"/><text class="svgtext allele-distal"/></g>`).join('')}</g>`;
   const view={};
-  for(const [group,attribute] of [['strands','strand'],['segments','segment'],['membranes','membrane'],['spindles','spindle'],['nuclei','nucleus']])
+  for(const [group,attribute] of [['strands','strand'],['segments','segment'],['membranes','membrane'],['spindles','spindle'],['nuclei','nucleus'],['equators','equator']])
     view[group]=new Map([...svg.querySelectorAll(`[data-${attribute}]`)].map(node=>[node.dataset[attribute],node]));
   svgViews.set(svg,view);
   return view;
@@ -636,7 +670,7 @@ function traceBetween(a,b,amount) {
   }).join(' ');
 }
 function strandTrace(a,distal,chromatin) {
-  const centre={x:a.x,y:a.y},top={x:a.x+a.topX,y:a.y+a.topY},cut={x:a.x+a.bottomX*.4,y:a.y+a.bottomY*.4},bottom={x:a.x+a.bottomX,y:a.y+a.bottomY};
+  const centre={x:a.x,y:a.y},top={x:a.x+a.topX,y:a.y+a.topY},cut={x:a.x+a.bottomX*.15,y:a.y+a.bottomY*.15},bottom={x:a.x+a.bottomX,y:a.y+a.bottomY};
   return distal?traceBetween(cut,bottom,chromatin):traceBetween(top,centre,chromatin)+' '+traceBetween(centre,cut,chromatin).replace(/^M/,'L');
 }
 function paintDrawing(svg) {
@@ -646,6 +680,7 @@ function paintDrawing(svg) {
   const name=phaseName(kind,position);
   document.querySelector(`[data-phase="${kind}"]`).textContent=name;
   svg.setAttribute('aria-label',t(kind)+' — '+name);
+  for(const a of frame.equators){const node=view.equators.get(a.key);setAttributes(node,{opacity:a.opacity});setAttributes(node.querySelector('path'),{d:`M ${a.x1} ${a.y1} L ${a.x2} ${a.y2}`});const label=node.querySelector('text');setAttributes(label,{x:a.labelX,y:a.labelY,'text-anchor':a.key==='first'?'end':'start'});label.textContent=t('equator');}
   for(const a of frame.nuclei)setAttributes(view.nuclei.get(a.key),{d:a.path,opacity:a.opacity});
   for(const a of frame.membranes) setAttributes(view.membranes.get(a.key),{d:a.path,opacity:a.opacity});
   for(const a of frame.spindles) setAttributes(view.spindles.get(a.key),{d:`M ${a.x} ${a.y} L ${a.toX} ${a.toY}`,opacity:a.opacity});
@@ -657,15 +692,16 @@ function paintDrawing(svg) {
     setAttributes(node,{opacity:a.opacity,tabindex:a.opacity<.01?-1:0,'aria-hidden':a.opacity<.01,'aria-label':`${t('identity')} ${a.id}; ${t('homologue')} ${a.origin==='M'?'P':'M'}${a.pair}`});
     setAttributes(node.querySelector('.proximal'),{d:strandTrace(a,false,frame.chromatin),stroke:colour(a.origin),'stroke-width':7-3*frame.chromatin,'stroke-dasharray':a.origin==='P'?'6 3':''});
     setAttributes(node.querySelector('.centromere'),{cx:a.x,cy:a.y,opacity:labelOpacity});
-    setAttributes(label,{x:a.x,y:a.y+a.length/2+17,opacity:s.labels?labelOpacity:0});
+    const sideLabel=kind==='meiosis'&&frame.attached>.5&&position>1;
+    setAttributes(label,{x:a.x+(sideLabel?(a.origin==='M'?-1:1)*(a.length/2+20):0),y:sideLabel?a.y+5:a.y+a.length/2+17,'text-anchor':sideLabel?(a.origin==='M'?'end':'start'):'middle',opacity:s.labels?labelOpacity:0});
     label.textContent=a.id;
     const allele=node.querySelector('.allele-proximal');
     setAttributes(allele,{x:a.x+a.topX+6,y:a.y+a.topY*.7,opacity:s.alleles?1:0});allele.textContent=a.origin+'a';
   }
   for(const a of frame.distal) {
     const node=view.segments.get(a.key);
-    setAttributes(node,{opacity:a.opacity});
-    setAttributes(node.querySelector('path'),{d:strandTrace(a,true,frame.chromatin),stroke:colour(a.origin),'stroke-width':7-3*frame.chromatin,'stroke-dasharray':a.origin==='P'?'6 3':''});
+    setAttributes(node,{opacity:a.opacity,'data-recipient':a.recipient});
+    setAttributes(node.querySelector('path'),{d:strandTrace(a,true,frame.chromatin),stroke:colour(a.origin),'stroke-width':(7-3*frame.chromatin)+(a.recipient!==a.key?1:0),'stroke-dasharray':a.origin==='P'?'6 3':''});
     const allele=node.querySelector('text');setAttributes(allele,{x:a.x+a.bottomX+6,y:a.y+a.bottomY*.9,opacity:s.alleles?1:0});allele.textContent=a.origin+'b';
   }
 }
@@ -692,7 +728,7 @@ function note(){if(s.event===1)return t('repnote');if(s.event===4&&s.kind==='mei
 function render(){const retained=new Map([...document.querySelectorAll('svg[data-kind]')].map(svg=>[svg.dataset.kind,svg]));const focused=document.activeElement?.id;document.documentElement.lang=lang==='zh'?'zh-Hant':'en-GB';document.title=t('brand');document.getElementById('brand').textContent=t('brand');['zh','en'].forEach(l=>{document.getElementById(l).classList.toggle('active',l===lang);document.getElementById(l).setAttribute('aria-pressed',l===lang)});
  const q=t('questions')[s.q];
  document.getElementById('app').innerHTML=`<div class="intro"><div><div class="eyebrow">${t('eyebrow')}</div><h1>${t('title')}</h1><p>${t('intro')}</p></div><span class="pill">${t('badge')}</span></div><nav class="toolbar" aria-label="${t('model')}">${btn('explore','explore',s.mode==='explore')}${btn('challenge','challenge',s.mode==='challenge')}<span style="flex:1"></span>${btn('mitosis','mitosis',s.kind==='mitosis')}${btn('meiosis','meiosis',s.kind==='meiosis')}${btn('compare','compare',s.compare)}</nav>
- <div class="layout"><section class="card"><div class="cardhead"><h2>${t('model')}</h2><button id="labels" aria-pressed="${s.labels}">${t('labels')}: ${t(s.labels?'on':'off')}</button></div><div class="stage"><small>${String(s.event+1).padStart(2,'0')} / 09</small> <b>${stage(s.kind,s.event)}</b></div>${s.compare?`<div class="muted" style="padding:0 20px">${t('sync')}</div>`:''}<div class="modelgrid ${s.compare?'compare':''}">${s.compare?drawing('mitosis')+drawing('meiosis'):drawing(s.kind)}</div><div class="legend"><span><i class="dot"></i>${t('maternal')}</span><span><i class="dot p"></i>${t('paternal')}</span><span>● ${terms[5][lang==='zh'?0:1]}</span></div><div class="transport"><div class="row">${btn('play',s.playing?'pause':'play',s.playing)}${btn('step','step')}${btn('replay','replay')}${btn('reset','reset')}<label for="speed" class="muted">${t('speed')}</label><select id="speed"><option value="4200" ${s.speed===4200?'selected':''}>${t('slow')}</option><option value="2400" ${s.speed===2400?'selected':''}>${t('normal')}</option><option value="1200" ${s.speed===1200?'selected':''}>${t('fast')}</option></select></div><input id="timeline" type="range" min="0" max="8" step="0.001" value="${s.position}" aria-label="${t('timeline')}"/><div class="events"><span>${t('stages')[0]}</span><span>${t('stages')[4]}</span><span>${t('stages')[8]}</span></div></div><details class="observation-note"><summary>${t('observationHint')}</summary><div class="notice" id="model-note">${note()}</div></details></section>
+ <div class="layout"><section class="card"><div class="cardhead"><h2>${t('model')}</h2><button id="labels" aria-pressed="${s.labels}">${t('labels')}: ${t(s.labels?'on':'off')}</button></div><div class="stage"><small>${String(s.event+1).padStart(2,'0')} / 09</small> <b>${stage(s.kind,s.event)}</b></div>${s.compare?`<div class="sync-caption">${t('sync')}</div>`:''}<div class="modelgrid ${s.compare?'compare':''}">${s.compare?drawing('mitosis')+drawing('meiosis'):drawing(s.kind)}</div><div class="legend"><span><i class="dot"></i>${t('maternal')}</span><span><i class="dot p"></i>${t('paternal')}</span><span>● ${terms[5][lang==='zh'?0:1]}</span>${s.cross?`<span class="exchange-legend">${t('exchangeLegend')}</span>`:''}</div><div class="transport"><div class="row">${btn('play',s.playing?'pause':'play',s.playing)}${btn('step','step')}${btn('replay','replay')}${btn('reset','reset')}<label for="speed" class="muted">${t('speed')}</label><select id="speed"><option value="4200" ${s.speed===4200?'selected':''}>${t('slow')}</option><option value="2400" ${s.speed===2400?'selected':''}>${t('normal')}</option><option value="1200" ${s.speed===1200?'selected':''}>${t('fast')}</option></select></div><input id="timeline" type="range" min="0" max="8" step="0.001" value="${s.position}" aria-label="${t('timeline')}"/><div class="events"><span>${t('stages')[0]}</span><span>${t('stages')[4]}</span><span>${t('stages')[8]}</span></div></div><details class="observation-note"><summary>${t('observationHint')}</summary><div class="notice" id="model-note">${note()}</div></details></section>
  <aside class="sidebar"><section class="card panel"><h2>${t('settings')}</h2>${[0,1].map(i=>`<div class="control"><label>${t('pair')} ${i+1} <b>${s.flips[i]?'P | M':'M | P'}</b></label><button id="flip${i}" ${s.event>=4?'disabled':''}>↔ ${t('flip')}</button></div>`).join('')}<div class="control"><label><input id="cross" type="checkbox" ${s.cross?'checked':''} ${s.event>=4?'disabled':''}>${t('cross')}</label></div><div class="control"><label><input id="reduced" type="checkbox" ${s.reduced?'checked':''}>${t('reducedMotion')}</label></div><div class="control"><label><input id="alleles" type="checkbox" ${s.alleles?'checked':''}>${t('alleles')}</label></div>${btn('random','random')}<p>${t('locked')}</p><details><summary>${t('cross')}</summary><p>${t('crosshelp')}</p></details></section><section class="card panel"><h2>${t('selected')}</h2><p>${s.selected?`${t('identity')}: <b>${s.selected}</b><br>${t('homologue')}: <b>${s.selected[0]==='M'?'P':'M'}${s.selected[1]}</b><br>${t('sisterHelp')}`:t('select')}</p></section></aside></div>
  <div class="below"><section class="card panel"><h2>${t('observations')}</h2><div class="row">${btn('record','record')}${btn('download','download')}${btn('clear','clear')}</div>${s.records.length?`<div class="scroll"><table data-records><thead><tr><th>${t('trial')}</th><th>${t('stage')}</th><th>${t('chromosomeChromatidCounts')}</th><th>${t('result')}</th></tr></thead><tbody>${s.records.map((r,i)=>`<tr><td>${i+1}<br>${t(r.kind)}<br>${t('crossCSV')}: ${t(r.cross?'on':'off')}<br>${r.flips.map(x=>x?'P|M':'M|P').join(' / ')}</td><td>${phaseName(r.kind,r.position)}<br>${t('time')}: ${r.position.toFixed(3)}</td><td>${r.counting.notation} / t = ${r.counting.chromatids}<br>${t('cell')} · ${t('dna')}: ${r.counting.count[1]}${r.counting.perPole?`<br>${t('pole')}: ${r.counting.perPole.notation}, t = ${r.counting.perPole.chromatids} · ${t('dna')}: ${r.counting.perPole.count[1]}`:''}</td><td>${r.event===8?r.snap.cells.map(c=>c.map(a=>`${a.id} [${a.loci.join('·')}]`).join(' + ')).join('<br>'):'—'}</td></tr>`).join('')}</tbody></table></div>`:`<p class="muted">${t('empty')}</p>`}</section>
  <section class="card panel" ${s.mode!=='challenge'?'hidden':''}><div class="eyebrow">${s.q+1} / 5</div><h2>${t('guide')}</h2><h3>${q[0]}</h3><p>${t('predict')}</p><div class="qoptions">${q[1].map((a,i)=>`<button data-choice="${i}" class="${s.choice===i?'active':''}">${a}</button>`).join('')}</div><div class="row">${btn('check','check')}${btn('hint','hint')}${btn('reveal','reveal')}</div>${s.hint?`<p class="notice">${q[3]}${s.hint>1?' '+t('predict'):''}</p>`:''}${s.attempt||s.reveal?`<div class="feedback">${s.attempt?t('attempt')+'<br>':''}${q[2]}</div>`:''}<label for="response"><p>${t('explain')}</p></label><textarea id="response">${esc(s.response)}</textarea>${btn('qnext','qnext')}</section></div>
